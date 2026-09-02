@@ -11,7 +11,7 @@ const leagueExternalId = `smoke-${Date.now()}`;
 const generated = createMockHistoryImport([new Date().getUTCFullYear()], {
   leagueExternalId,
   importSessionId,
-  helperVersion: '0.2.0',
+  helperVersion: '0.3.0',
   platform: process.platform
 });
 const bundle = validateHistoryImport({

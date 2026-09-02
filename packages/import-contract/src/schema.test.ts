@@ -37,7 +37,14 @@ describe('LeagueSaga import contract', () => {
     season.matchups[0]!.winnerTeamExternalId = 'missing-team';
     season.transactions.push({
       externalId: 'tx-1',
-      items: [{ type: 'add', teamExternalId: 'missing-team' }]
+      type: 'add',
+      items: [
+        {
+          type: 'add',
+          toTeamExternalId: 'missing-team',
+          player: { externalId: '1002', fullName: 'New Player', positions: [] }
+        }
+      ]
     });
 
     const result = safeValidateHistorySeason(season);
@@ -48,6 +55,39 @@ describe('LeagueSaga import contract', () => {
       expect(messages).toContain('Roster entry references unknown team missing-team.');
       expect(messages).toContain('Matchup winner missing-team is not a participant.');
       expect(messages).toContain('Transaction item references unknown team missing-team.');
+    }
+  });
+
+  it('rejects inconsistent transaction coverage and invalid player movement', () => {
+    const season = createMockHistorySeason();
+    season.transactionCoverage = {
+      available: false,
+      detailLevel: 'player',
+      periodsRequested: 2,
+      periodsSupported: 3,
+      limitations: []
+    };
+    season.transactions.push({
+      externalId: 'tx-1',
+      type: 'trade',
+      items: [
+        {
+          type: 'trade',
+          fromTeamExternalId: '1',
+          toTeamExternalId: '1',
+          player: { externalId: '1002', fullName: 'New Player', positions: [] }
+        }
+      ]
+    });
+
+    const result = safeValidateHistorySeason(season);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.map((issue) => issue.message);
+      expect(messages).toContain('Transaction coverage cannot support more periods than were requested.');
+      expect(messages).toContain('Transaction coverage detail level must match availability.');
+      expect(messages).toContain('Transaction player movement cannot use the same source and destination team.');
     }
   });
 

@@ -27,7 +27,7 @@ describe('ESPN history imports', () => {
 
     const history = await importEspnHistory(
       { leagueId: '123' },
-      { currentSeason: 2026, helperVersion: '0.2.0', platform: 'test' },
+      { currentSeason: 2026, helperVersion: '0.3.0', platform: 'test' },
       { fetchSeason, transformSeason }
     );
 
@@ -43,7 +43,7 @@ describe('ESPN history imports', () => {
 
     const history = await importEspnHistory(
       { leagueId: '123', startYear: 2024 },
-      { currentSeason: 2026, helperVersion: '0.2.0', platform: 'test' },
+      { currentSeason: 2026, helperVersion: '0.3.0', platform: 'test' },
       { fetchSeason, transformSeason }
     );
 
@@ -55,7 +55,7 @@ describe('ESPN history imports', () => {
     await expect(
       importEspnHistory(
         { leagueId: '123', startYear: 2027 },
-        { currentSeason: 2026, helperVersion: '0.2.0', platform: 'test' },
+        { currentSeason: 2026, helperVersion: '0.3.0', platform: 'test' },
         { fetchSeason: vi.fn(), transformSeason }
       )
     ).rejects.toThrow('cannot be later');

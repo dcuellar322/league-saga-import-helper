@@ -21,28 +21,28 @@ Provider response -> provider adapter -> history import JSON -> LeagueSaga impor
 
 ## Current version
 
-| Version | Document                             | Status                        |
-| ------- | ------------------------------------ | ----------------------------- |
-| `0.2.0` | Compact multi-season history package | First public contract version |
+| Version | Document                                                | Status  |
+| ------- | ------------------------------------------------------- | ------- |
+| `0.3.0` | Multi-season history with complete transaction products | Current |
 
 The canonical machine-readable schemas are:
 
-- [`schemas/leaguesaga-history-import-v0.2.schema.json`](../schemas/leaguesaga-history-import-v0.2.schema.json)
+- [`schemas/leaguesaga-history-import-v0.3.schema.json`](../schemas/leaguesaga-history-import-v0.3.schema.json)
 
 LeagueSaga validates the complete document before it previews or stores any imported league data.
 
-## Why version 0.2 is compact
+## Contract design
 
 During development, each season was represented as a complete standalone package. A history export
 therefore repeated the provider, helper version, import session, league ID, contract version, and
 season on many nested records. That unpublished shape was removed before the first public release.
 
-Version 0.2 keeps shared context in the envelope and the season year on its season container.
+The contract keeps shared context in the envelope and the season year on its season container.
 Nested records retain explicit provider external IDs but do not repeat the provider, league ID, or
 season. Player snapshots remain nested in roster, draft, and transaction records. The format does
 not merge those snapshots because a player's provider data can differ by season or event.
 
-On a representative ten-season development fixture, the v0.2 structure is about 30% smaller than
+On a representative ten-season development fixture, this structure is about 30% smaller than
 the former nested-bundle structure in both pretty-printed and minified JSON. Actual savings depend
 on the league and the data categories selected by the user.
 
@@ -51,7 +51,7 @@ on the league and the data categories selected by the user.
 | Field                      | Meaning                                                       |
 | -------------------------- | ------------------------------------------------------------- |
 | `kind`                     | Always `league-history`                                       |
-| `contractVersion`          | Exact history-contract version; currently `0.2.0`             |
+| `contractVersion`          | Exact history-contract version; currently `0.3.0`             |
 | `provider`                 | Source provider: `espn`, `yahoo`, `sleeper`, or `mock`        |
 | `generatedAt`              | UTC or offset-aware ISO 8601 generation timestamp             |
 | `helper`                   | Public generator name, version, and operating-system platform |
@@ -66,19 +66,34 @@ on the league and the data categories selected by the user.
 
 Each season contains:
 
-| Field           | Meaning                                                                        |
-| --------------- | ------------------------------------------------------------------------------ |
-| `season`        | Four-digit fantasy season year                                                 |
-| `league`        | Season-specific league name, size, visibility, period, and normalized settings |
-| `teams`         | Team identity and owner display information                                    |
-| `rosterEntries` | Team-to-player assignments and lineup context                                  |
-| `matchups`      | Participants, scores, projections, winner, and playoff classification          |
-| `draftPicks`    | Draft order, team, player, keeper, and auction information                     |
-| `transactions`  | Normalized transaction events and player/team items                            |
-| `warnings`      | Season-specific coverage notices                                               |
+| Field                   | Meaning                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| `season`                | Four-digit fantasy season year                                                 |
+| `league`                | Season-specific league name, size, visibility, period, and normalized settings |
+| `teams`                 | Team identity and owner display information                                    |
+| `rosterEntries`         | Team-to-player assignments and lineup context                                  |
+| `matchups`              | Participants, scores, projections, winner, and playoff classification          |
+| `draftPicks`            | Draft order, team, player, keeper, and auction information                     |
+| `transactions`          | Player-level events with scoring period and source/destination teams           |
+| `transactionCoverage`   | Availability, requested/supported periods, and explicit limitations            |
+| `transactionSummaries`  | ESPN's authoritative season counters for each team                             |
+| `tradePartnerSummaries` | Completed trade-event counts for each unordered team pair                      |
+| `warnings`              | Season-specific coverage notices                                               |
 
 League and teams are required. The user can remove rosters, matchups, draft picks, or transactions
 before saving or uploading the document.
+
+### ESPN coverage
+
+The ESPN adapter requests transaction history for each scoring period from 2018 onward, records the
+period on each event, merges responses by ESPN transaction ID, and consolidates completed trade
+events with their proposal items. It preserves both sides of each player movement. Team transaction
+totals come from ESPN's team counters, while trade-partner totals count completed trade events once
+per team pair. It also resolves draft and transaction player IDs through ESPN's fantasy player view
+and uses ESPN's public athlete record as a draft-player fallback.
+
+ESPN's legacy league-history response can supply seasons before 2018, but it does not supply the
+same player-level transaction coverage. Those seasons remain importable with a coverage warning.
 
 ## Normalized league settings
 
@@ -100,12 +115,12 @@ not become a LeagueSaga internal identifier.
 ```json
 {
   "kind": "league-history",
-  "contractVersion": "0.2.0",
+  "contractVersion": "0.3.0",
   "provider": "espn",
   "generatedAt": "2026-09-02T12:00:00Z",
   "helper": {
     "name": "LeagueSaga Import Helper",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "platform": "darwin"
   },
   "leagueExternalId": "123456",
@@ -154,6 +169,15 @@ not become a LeagueSaga internal identifier.
       "matchups": [],
       "draftPicks": [],
       "transactions": [],
+      "transactionCoverage": {
+        "available": true,
+        "detailLevel": "player",
+        "periodsRequested": 17,
+        "periodsSupported": 17,
+        "limitations": []
+      },
+      "transactionSummaries": [],
+      "tradePartnerSummaries": [],
       "warnings": []
     }
   ],

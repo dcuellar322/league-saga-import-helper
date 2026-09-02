@@ -107,19 +107,83 @@ export const HistoryDraftPickSchema = z.object({
   auctionPrice: z.number().optional()
 });
 
-export const HistoryTransactionItemSchema = z.object({
-  type: z.enum(['add', 'drop', 'trade', 'draft', 'waiver', 'free_agent', 'unknown']),
-  teamExternalId: z.string().optional(),
-  player: HistoryPlayerSchema.optional(),
-  notes: z.string().optional()
-});
+export const HistoryTransactionItemSchema = z
+  .object({
+    type: z.enum(['add', 'drop', 'trade', 'draft', 'waiver', 'free_agent', 'unknown']),
+    fromTeamExternalId: z.string().min(1).optional(),
+    toTeamExternalId: z.string().min(1).optional(),
+    player: HistoryPlayerSchema,
+    notes: z.string().optional()
+  })
+  .refine((item) => item.fromTeamExternalId || item.toTeamExternalId, {
+    message: 'Transaction player movement must reference a source or destination team.'
+  })
+  .refine(
+    (item) => !item.fromTeamExternalId || !item.toTeamExternalId || item.fromTeamExternalId !== item.toTeamExternalId,
+    { message: 'Transaction player movement cannot use the same source and destination team.' }
+  );
 
 export const HistoryTransactionSchema = z.object({
   externalId: z.string().min(1),
+  type: z.enum(['add', 'drop', 'trade', 'draft', 'waiver', 'free_agent', 'unknown']),
   occurredAt: z.string().datetime().optional(),
   status: z.string().optional(),
-  items: z.array(HistoryTransactionItemSchema).default([]),
+  scoringPeriodId: z.number().int().positive().optional(),
+  items: z.array(HistoryTransactionItemSchema).min(1),
   notes: z.string().optional()
+});
+
+export const HistoryTransactionCoverageSchema = z
+  .object({
+    available: z.boolean(),
+    detailLevel: z.enum(['player', 'unavailable']),
+    periodsRequested: z.number().int().nonnegative(),
+    periodsSupported: z.number().int().nonnegative(),
+    limitations: z.array(z.string())
+  })
+  .superRefine((coverage, ctx) => {
+    if (coverage.periodsSupported > coverage.periodsRequested) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Transaction coverage cannot support more periods than were requested.',
+        path: ['periodsSupported']
+      });
+    }
+    if (coverage.available !== coverage.periodsSupported > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Transaction coverage availability must match supported periods.',
+        path: ['available']
+      });
+    }
+    const expectedDetailLevel = coverage.available ? 'player' : 'unavailable';
+    if (coverage.detailLevel !== expectedDetailLevel) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Transaction coverage detail level must match availability.',
+        path: ['detailLevel']
+      });
+    }
+  });
+
+export const HistoryTeamTransactionSummarySchema = z.object({
+  teamExternalId: z.string().min(1),
+  trades: z.number().int().nonnegative(),
+  acquisitions: z.number().int().nonnegative(),
+  drops: z.number().int().nonnegative(),
+  acquisitionBudgetSpent: z.number().int().nonnegative(),
+  moveToActive: z.number().int().nonnegative(),
+  moveToIR: z.number().int().nonnegative(),
+  paid: z.number().int().nonnegative(),
+  teamCharges: z.number().int().nonnegative(),
+  misc: z.number().int().nonnegative(),
+  matchupAcquisitionTotals: z.record(z.string(), z.number().int().nonnegative())
+});
+
+export const HistoryTeamTradePartnerSummarySchema = z.object({
+  teamAExternalId: z.string().min(1),
+  teamBExternalId: z.string().min(1),
+  trades: z.number().int().positive()
 });
 
 export const LeagueSagaHistorySeasonSchema = z
@@ -130,13 +194,18 @@ export const LeagueSagaHistorySeasonSchema = z
     rosterEntries: z.array(HistoryRosterEntrySchema).default([]),
     matchups: z.array(HistoryMatchupSchema).default([]),
     draftPicks: z.array(HistoryDraftPickSchema).default([]),
-    transactions: z.array(HistoryTransactionSchema).default([]),
+    transactions: z.array(HistoryTransactionSchema),
+    transactionCoverage: HistoryTransactionCoverageSchema,
+    transactionSummaries: z.array(HistoryTeamTransactionSummarySchema),
+    tradePartnerSummaries: z.array(HistoryTeamTradePartnerSummarySchema),
     warnings: z.array(z.string()).default([])
   })
   .superRefine((season, ctx) => {
     const teamIds = new Set<string>();
     const matchupIds = new Set<string>();
     const transactionIds = new Set<string>();
+    const transactionSummaryTeamIds = new Set<string>();
+    const tradePartnerPairs = new Set<string>();
 
     function issue(message: string, path: Array<string | number>) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message, path });
@@ -179,16 +248,46 @@ export const LeagueSagaHistorySeasonSchema = z
         issue(`Duplicate transaction external ID ${transaction.externalId}.`, ['transactions', index]);
       } else transactionIds.add(transaction.externalId);
       for (const [itemIndex, item] of transaction.items.entries()) {
-        if (item.teamExternalId && !teamIds.has(item.teamExternalId)) {
-          issue(`Transaction item references unknown team ${item.teamExternalId}.`, [
-            'transactions',
-            index,
-            'items',
-            itemIndex,
-            'teamExternalId'
-          ]);
+        for (const field of ['fromTeamExternalId', 'toTeamExternalId'] as const) {
+          const teamId = item[field];
+          if (teamId && !teamIds.has(teamId)) {
+            issue(`Transaction item references unknown team ${teamId}.`, [
+              'transactions',
+              index,
+              'items',
+              itemIndex,
+              field
+            ]);
+          }
         }
       }
+    }
+    for (const [index, summary] of season.transactionSummaries.entries()) {
+      if (!teamIds.has(summary.teamExternalId)) {
+        issue(`Transaction summary references unknown team ${summary.teamExternalId}.`, [
+          'transactionSummaries',
+          index,
+          'teamExternalId'
+        ]);
+      }
+      if (transactionSummaryTeamIds.has(summary.teamExternalId)) {
+        issue(`Duplicate transaction summary for team ${summary.teamExternalId}.`, ['transactionSummaries', index]);
+      } else transactionSummaryTeamIds.add(summary.teamExternalId);
+    }
+    for (const [index, summary] of season.tradePartnerSummaries.entries()) {
+      for (const field of ['teamAExternalId', 'teamBExternalId'] as const) {
+        const teamId = summary[field];
+        if (!teamIds.has(teamId)) {
+          issue(`Trade partner summary references unknown team ${teamId}.`, ['tradePartnerSummaries', index, field]);
+        }
+      }
+      if (summary.teamAExternalId === summary.teamBExternalId) {
+        issue('Trade partner summary must reference two different teams.', ['tradePartnerSummaries', index]);
+      }
+      const pair = [summary.teamAExternalId, summary.teamBExternalId].sort().join('\u0000');
+      if (tradePartnerPairs.has(pair)) {
+        issue('Duplicate trade partner summary.', ['tradePartnerSummaries', index]);
+      } else tradePartnerPairs.add(pair);
     }
   });
 
@@ -259,3 +358,6 @@ export type LeagueSagaHistoryRosterEntry = z.infer<typeof HistoryRosterEntrySche
 export type LeagueSagaHistoryMatchup = z.infer<typeof HistoryMatchupSchema>;
 export type LeagueSagaHistoryDraftPick = z.infer<typeof HistoryDraftPickSchema>;
 export type LeagueSagaHistoryTransaction = z.infer<typeof HistoryTransactionSchema>;
+export type LeagueSagaHistoryTransactionCoverage = z.infer<typeof HistoryTransactionCoverageSchema>;
+export type LeagueSagaHistoryTeamTransactionSummary = z.infer<typeof HistoryTeamTransactionSummarySchema>;
+export type LeagueSagaHistoryTeamTradePartnerSummary = z.infer<typeof HistoryTeamTradePartnerSummarySchema>;

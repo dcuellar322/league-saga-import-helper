@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 const tag = (process.argv[2] ?? process.env.GITHUB_REF_NAME ?? '').replace(/^v/, '');
-if (!/^\d+\.\d+\.\d+(?:[-+].+)?$/.test(tag)) throw new Error('Provide a semantic release tag such as v0.2.0.');
+if (!/^\d+\.\d+\.\d+(?:[-+].+)?$/.test(tag)) throw new Error('Provide a semantic release tag such as v0.3.0.');
 
 const rootPackage = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf-8'));
 const desktopPackage = JSON.parse(await readFile(new URL('../apps/desktop/package.json', import.meta.url), 'utf-8'));

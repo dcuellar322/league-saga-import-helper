@@ -1,6 +1,6 @@
 {
   "name": "@leaguesaga/import-contract",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Shared LeagueSaga multi-season history import contract.",
   "type": "module",
   "main": "dist/index.js",

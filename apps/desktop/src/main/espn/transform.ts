@@ -6,9 +6,13 @@ import {
   type LeagueSagaHistoryRosterEntry,
   type LeagueSagaHistorySeason,
   type LeagueSagaHistoryTeam,
+  type LeagueSagaHistoryTeamTradePartnerSummary,
+  type LeagueSagaHistoryTeamTransactionSummary,
   type LeagueSagaHistoryTransaction,
+  type LeagueSagaHistoryTransactionCoverage,
   type NormalizedLeagueSettings
 } from '@leaguesaga/import-contract';
+import { ESPN_IMPORT_METADATA_KEY } from './payload.js';
 
 export type TransformContext = {
   leagueId: string;
@@ -23,12 +27,12 @@ export function transformEspnPayload(payload: unknown, context: TransformContext
   const teamsRaw = asArray(data.teams);
   const scheduleRaw = asArray(data.schedule);
   const draftDetail = asRecord(data.draftDetail);
-  const transactionsRaw = asArray(data.transactions);
+  const transactionsRaw = normalizeTransactionRows(asArray(data.transactions));
   const memberNames = buildMemberNameMap(asArray(data.members));
 
   const teams = teamsRaw.map((team) => mapTeam(team, memberNames)).filter(Boolean) as LeagueSagaHistoryTeam[];
   const rosterEntries = teamsRaw.flatMap((team) => mapRosterEntries(team));
-  const playerLookup = new Map(rosterEntries.map((entry) => [entry.player.externalId, entry.player]));
+  const playerLookup = buildPlayerLookup(asArray(data.players), rosterEntries);
   const matchups = scheduleRaw
     .map((matchup) => mapMatchup(matchup, context.season))
     .filter(Boolean) as LeagueSagaHistoryMatchup[];
@@ -38,20 +42,29 @@ export function transformEspnPayload(payload: unknown, context: TransformContext
   const transactions = transactionsRaw
     .map((transaction) => mapTransaction(transaction, playerLookup))
     .filter(Boolean) as LeagueSagaHistoryTransaction[];
+  const transactionSummaries = teamsRaw
+    .map(mapTransactionSummary)
+    .filter(Boolean) as LeagueSagaHistoryTeamTransactionSummary[];
+  const tradePartnerSummaries = mapTradePartnerSummaries(transactions);
 
   if (!teams.length) {
     throw new Error('ESPN returned no teams. Check the league ID, season, and account access, then try again.');
   }
 
+  const unresolvedPlayers = [
+    ...draftPicks.flatMap((pick) => (pick.player ? [pick.player] : [])),
+    ...transactions.flatMap((transaction) => transaction.items.flatMap((item) => (item.player ? [item.player] : [])))
+  ].filter((player) => player.fullName.startsWith('ESPN Player ')).length;
+  const unresolvedTransactionPlayers = transactions
+    .flatMap((transaction) => transaction.items.flatMap((item) => (item.player ? [item.player] : [])))
+    .filter((player) => player.fullName.startsWith('ESPN Player ')).length;
+  const transactionCoverage = mapTransactionCoverage(data, context.season, unresolvedTransactionPlayers);
   const warnings: string[] = [];
   if (!rosterEntries.length)
     warnings.push(
       'No roster entries were found. ESPN may have returned limited data or the season may be unavailable.'
     );
-  const unresolvedPlayers = [
-    ...draftPicks.flatMap((pick) => (pick.player ? [pick.player] : [])),
-    ...transactions.flatMap((transaction) => transaction.items.flatMap((item) => (item.player ? [item.player] : [])))
-  ].filter((player) => player.fullName.startsWith('ESPN Player ')).length;
+  warnings.push(...transactionCoverage.limitations);
   if (unresolvedPlayers)
     warnings.push(
       `${unresolvedPlayers} draft or transaction player names were unavailable; ESPN player IDs were preserved for matching.`
@@ -76,6 +89,9 @@ export function transformEspnPayload(payload: unknown, context: TransformContext
     matchups,
     draftPicks,
     transactions,
+    transactionCoverage,
+    transactionSummaries,
+    tradePartnerSummaries,
     warnings
   };
 
@@ -90,7 +106,16 @@ function mapTeam(input: unknown, memberNames: Map<string, string>): LeagueSagaHi
   const location = asString(team.location);
   const nickname = asString(team.nickname);
   const displayName = [location, nickname].filter(Boolean).join(' ').trim() || asString(team.name) || `Team ${id}`;
-  const owners = asArray(team.owners).map((owner) => memberNames.get(String(owner)) ?? String(owner));
+  const owners = asArray(team.owners).flatMap((owner) => {
+    const name = memberNames.get(String(owner));
+    return name ? [name] : [];
+  });
+  const primaryOwnerName = memberNames.get(String(team.primaryOwner));
+  if (primaryOwnerName) {
+    const existingIndex = owners.indexOf(primaryOwnerName);
+    if (existingIndex >= 0) owners.splice(existingIndex, 1);
+    owners.unshift(primaryOwnerName);
+  }
 
   return {
     externalId: id,
@@ -99,9 +124,12 @@ function mapTeam(input: unknown, memberNames: Map<string, string>): LeagueSagaHi
     nickname,
     displayName,
     ownerDisplayNames: owners,
-    logoUrl: maybeUrl(asString(team.logo)),
+    logoUrl: maybeUrl(teamLogo(team)),
     playoffSeed: positiveIntegerOrUndefined(team.playoffSeed),
-    finalStanding: positiveIntegerOrUndefined(team.finalStanding)
+    finalStanding:
+      positiveIntegerOrUndefined(team.finalStanding) ??
+      positiveIntegerOrUndefined(team.rankCalculatedFinal) ??
+      positiveIntegerOrUndefined(team.rankFinal)
   };
 }
 
@@ -113,7 +141,7 @@ function mapRosterEntries(input: unknown): LeagueSagaHistoryRosterEntry[] {
   return asArray(asRecord(team.roster).entries).flatMap((entry) => {
     const record = asRecord(entry);
     const playerPoolEntry = asRecord(record.playerPoolEntry);
-    const player = mapPlayer(playerPoolEntry.player ?? record.player);
+    const player = mapPlayer(record);
     if (!player) return [];
     return [
       {
@@ -122,29 +150,35 @@ function mapRosterEntries(input: unknown): LeagueSagaHistoryRosterEntry[] {
         lineupSlot: lineupSlotName(record.lineupSlotId),
         acquisitionType: asString(record.acquisitionType),
         acquisitionDate: dateFromMaybeEpoch(record.acquisitionDate),
-        injuryStatus: asString(playerPoolEntry.injuryStatus)
+        injuryStatus: firstString(playerCandidates(record), 'injuryStatus') ?? asString(playerPoolEntry.injuryStatus)
       }
     ];
   });
 }
 
 function mapPlayer(input: unknown): LeagueSagaHistoryPlayer | null {
-  const player = asRecord(input);
-  const id = asString(player.id) ?? asString(player.playerId);
+  const candidates = playerCandidates(input);
+  const id = firstString(candidates, 'id') ?? firstString(candidates, 'playerId');
   if (!id) return null;
 
-  const fallbackName = [asString(player.firstName), asString(player.lastName)].filter(Boolean).join(' ').trim();
-  const fullName = asString(player.fullName) ?? (fallbackName || `Player ${id}`);
+  const firstName = firstString(candidates, 'firstName');
+  const lastName = firstString(candidates, 'lastName');
+  const fallbackName = [firstName, lastName].filter(Boolean).join(' ').trim();
+  const fullName =
+    firstString(candidates, 'fullName') ??
+    firstString(candidates, 'displayName') ??
+    firstString(candidates, 'playerName') ??
+    (fallbackName || `ESPN Player ${id}`);
 
   return {
     externalId: id,
     fullName,
-    firstName: asString(player.firstName),
-    lastName: asString(player.lastName),
-    proTeam: asString(player.proTeamAbbrev) ?? asString(player.proTeamId),
-    positions: playerPositions(player),
-    jersey: asString(player.jersey),
-    status: asString(player.injuryStatus) ?? asString(player.status)
+    firstName,
+    lastName,
+    proTeam: firstString(candidates, 'proTeamAbbrev') ?? firstString(candidates, 'proTeamId'),
+    positions: candidates.flatMap(playerPositions).slice(0, 1),
+    jersey: firstString(candidates, 'jersey'),
+    status: firstString(candidates, 'injuryStatus') ?? firstString(candidates, 'status')
   };
 }
 
@@ -161,7 +195,12 @@ function mapMatchup(input: unknown, season: number): LeagueSagaHistoryMatchup | 
   const winner = asString(matchup.winner)?.toUpperCase();
   if (home && winner === 'HOME') home.winner = true;
   if (away && winner === 'AWAY') away.winner = true;
-  const winnerTeamExternalId = home?.winner ? home.teamExternalId : away?.winner ? away.teamExternalId : undefined;
+  const winnerTeamExternalId =
+    home?.winner || (home?.score !== undefined && away?.score !== undefined && home.score > away.score)
+      ? home?.teamExternalId
+      : away?.winner || (home?.score !== undefined && away?.score !== undefined && away.score > home.score)
+        ? away?.teamExternalId
+        : undefined;
 
   return {
     externalId: id,
@@ -194,9 +233,22 @@ function mapDraftPick(
   const pick = asRecord(input);
   const overallPick = positiveIntegerOrUndefined(pick.overallPickNumber) ?? positiveIntegerOrUndefined(pick.pickNumber);
   const teamExternalId = positiveIdString(pick.teamId);
-  const player =
-    mapPlayer(pick.playerPoolEntry ? asRecord(pick.playerPoolEntry).player : pick.player) ??
-    playerFromId(pick.playerId, players);
+  const playerId = asString(pick.playerId);
+  const numericPlayerId = numberOrUndefined(playerId);
+  const lineupSlotId = numberOrUndefined(pick.lineupSlotId);
+  if ((numericPlayerId === undefined || numericPlayerId <= 0) && lineupSlotId !== undefined && lineupSlotId < 0)
+    return null;
+
+  let player = resolvePlayer(pick, players);
+  const playerName = asString(pick.playerName);
+  if (playerName && playerId) {
+    const position = asString(pick.position) ?? lineupSlotName(lineupSlotId);
+    player = {
+      ...(player ?? { externalId: playerId, positions: [] }),
+      fullName: playerName,
+      positions: player?.positions.length ? player.positions : position ? [position] : []
+    };
+  }
 
   if (!overallPick && !player) return null;
 
@@ -219,35 +271,219 @@ function mapTransaction(
   const tx = asRecord(input);
   const id = asString(tx.id) ?? asString(tx.transactionId);
   if (!id) return null;
+  const items = asArray(tx.items).flatMap((item) => {
+    const record = asRecord(item);
+    const player = resolvePlayer(record, players);
+    const fromTeamExternalId = positiveIdString(record.fromTeamId);
+    const toTeamExternalId = positiveIdString(record.toTeamId);
+    if (!player || (!fromTeamExternalId && !toTeamExternalId)) return [];
+    return [
+      {
+        type: normalizeTransactionType(record.type),
+        fromTeamExternalId,
+        toTeamExternalId,
+        player,
+        notes: asString(record.type)
+      }
+    ];
+  });
+  if (!items.length) return null;
+  const type = normalizeTransactionEventType(tx.type);
   return {
     externalId: id,
-    occurredAt: dateFromMaybeEpoch(tx.proposedDate ?? tx.processDate ?? tx.date),
+    type: type === 'unknown' ? (items.find((item) => item.type !== 'unknown')?.type ?? 'unknown') : type,
+    occurredAt: dateFromMaybeEpoch(tx.processDate ?? tx.proposedDate ?? tx.date),
     status: asString(tx.status),
+    scoringPeriodId: positiveIntegerOrUndefined(tx.scoringPeriodId),
     notes: asString(tx.type),
-    items: asArray(tx.items).map((item) => {
-      const record = asRecord(item);
-      const player = mapPlayer(record.player) ?? playerFromId(record.playerId, players);
-      return {
-        type: normalizeTransactionType(record.type),
-        teamExternalId: positiveIdString(record.toTeamId) ?? positiveIdString(record.fromTeamId),
-        ...(player ? { player } : {}),
-        notes: asString(record.type)
-      };
-    })
+    items
   };
+}
+
+function mapTransactionSummary(input: unknown): LeagueSagaHistoryTeamTransactionSummary | null {
+  const team = asRecord(input);
+  const teamExternalId = positiveIdString(team.id) ?? positiveIdString(team.teamId);
+  const counter = asRecord(team.transactionCounter);
+  if (!teamExternalId || !Object.keys(counter).length) return null;
+  const matchupAcquisitionTotals = Object.fromEntries(
+    Object.entries(asRecord(team.matchupAcquisitionTotals)).flatMap(([period, value]) => {
+      const total = nonnegativeIntegerOrUndefined(value);
+      return total === undefined ? [] : [[period, total]];
+    })
+  );
+  return {
+    teamExternalId,
+    trades: nonnegativeIntegerOrUndefined(counter.trades) ?? 0,
+    acquisitions: nonnegativeIntegerOrUndefined(counter.acquisitions) ?? 0,
+    drops: nonnegativeIntegerOrUndefined(counter.drops) ?? 0,
+    acquisitionBudgetSpent: nonnegativeIntegerOrUndefined(counter.acquisitionBudgetSpent) ?? 0,
+    moveToActive: nonnegativeIntegerOrUndefined(counter.moveToActive) ?? 0,
+    moveToIR: nonnegativeIntegerOrUndefined(counter.moveToIR) ?? 0,
+    paid: nonnegativeIntegerOrUndefined(counter.paid) ?? 0,
+    teamCharges: nonnegativeIntegerOrUndefined(counter.teamCharges) ?? 0,
+    misc: nonnegativeIntegerOrUndefined(counter.misc) ?? 0,
+    matchupAcquisitionTotals
+  };
+}
+
+function mapTradePartnerSummaries(
+  transactions: LeagueSagaHistoryTransaction[]
+): LeagueSagaHistoryTeamTradePartnerSummary[] {
+  const pairCounts = new Map<string, number>();
+  for (const transaction of transactions) {
+    if (transaction.type !== 'trade') continue;
+    const eventPairs = new Set<string>();
+    for (const item of transaction.items) {
+      const fromTeam = item.fromTeamExternalId;
+      const toTeam = item.toTeamExternalId;
+      if (!fromTeam || !toTeam || fromTeam === toTeam) continue;
+      eventPairs.add([fromTeam, toTeam].sort().join('\u0000'));
+    }
+    for (const pair of eventPairs) pairCounts.set(pair, (pairCounts.get(pair) ?? 0) + 1);
+  }
+  return [...pairCounts.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([pair, trades]) => {
+      const [teamAExternalId, teamBExternalId] = pair.split('\u0000') as [string, string];
+      return { teamAExternalId, teamBExternalId, trades };
+    });
 }
 
 function normalizeTransactionType(
   input: unknown
 ): 'add' | 'drop' | 'trade' | 'draft' | 'waiver' | 'free_agent' | 'unknown' {
   const value = String(input ?? '').toLowerCase();
-  if (value.includes('add')) return 'add';
-  if (value.includes('drop')) return 'drop';
   if (value.includes('trade')) return 'trade';
-  if (value.includes('draft')) return 'draft';
+  if (value.includes('drop')) return 'drop';
+  if (value.includes('add')) return 'add';
   if (value.includes('waiver')) return 'waiver';
   if (value.includes('free')) return 'free_agent';
+  if (value.includes('draft')) return 'draft';
   return 'unknown';
+}
+
+function normalizeTransactionEventType(
+  input: unknown
+): 'add' | 'drop' | 'trade' | 'draft' | 'waiver' | 'free_agent' | 'unknown' {
+  const value = String(input ?? '').toLowerCase();
+  if (value.includes('trade')) return 'trade';
+  if (value.includes('waiver')) return 'waiver';
+  if (value.includes('free')) return 'free_agent';
+  return normalizeTransactionType(input);
+}
+
+function normalizeTransactionRows(input: unknown[]): unknown[] {
+  const rows = input.map(asRecord).filter((row) => Object.keys(row).length > 0);
+  const proposals = new Map<string, Record<string, unknown>>();
+  for (const row of rows) {
+    if (asString(row.type)?.toUpperCase() !== 'TRADE_PROPOSAL') continue;
+    const id = asString(row.id) ?? asString(row.transactionId);
+    if (id) proposals.set(id, row);
+  }
+
+  const normalized = new Map<string, Record<string, unknown>>();
+  for (const row of rows) {
+    const sourceType = asString(row.type)?.toUpperCase() ?? '';
+    if (sourceType === 'TRADE_PROPOSAL') continue;
+
+    const relatedId = asString(row.relatedTransactionId);
+    const sourceId = asString(row.id) ?? asString(row.transactionId);
+    const id = sourceType === 'TRADE_ACCEPT' || sourceType === 'TRADE_UPHOLD' ? (relatedId ?? sourceId) : sourceId;
+    if (!id) continue;
+
+    const proposal = relatedId ? proposals.get(relatedId) : undefined;
+    const items = asArray(row.items).length ? asArray(row.items) : asArray(proposal?.items);
+    const transaction = {
+      ...proposal,
+      ...row,
+      id,
+      ...(sourceType === 'TRADE_ACCEPT' || sourceType === 'TRADE_UPHOLD' ? { type: 'TRADE' } : {}),
+      items
+    };
+    const existing = normalized.get(id);
+    if (!existing || asArray(transaction.items).length > asArray(existing.items).length)
+      normalized.set(id, transaction);
+  }
+  return [...normalized.values()];
+}
+
+function buildPlayerLookup(
+  players: unknown[],
+  rosterEntries: LeagueSagaHistoryRosterEntry[]
+): Map<string, LeagueSagaHistoryPlayer> {
+  const result = new Map<string, LeagueSagaHistoryPlayer>();
+  for (const input of players) {
+    const player = mapPlayer(input);
+    if (player) result.set(player.externalId, player);
+  }
+  for (const entry of rosterEntries) result.set(entry.player.externalId, entry.player);
+  return result;
+}
+
+function mapTransactionCoverage(
+  data: Record<string, unknown>,
+  season: number,
+  unresolvedPlayerNames: number
+): LeagueSagaHistoryTransactionCoverage {
+  const metadata = asRecord(data[ESPN_IMPORT_METADATA_KEY]);
+  const requested = nonnegativeIntegerOrUndefined(metadata.transactionPeriodsRequested) ?? 0;
+  const supported = nonnegativeIntegerOrUndefined(metadata.transactionPeriodsSupported) ?? 0;
+  const available = asBoolean(metadata.transactionHistoryAvailable) ?? (season >= 2018 && supported > 0);
+  const limitations: string[] = [];
+  if (!available && season < 2018)
+    limitations.push('ESPN player-level transaction history is unavailable before 2018.');
+  else if (requested > supported)
+    limitations.push(`ESPN returned transaction data for ${supported} of ${requested} scoring periods.`);
+  if (unresolvedPlayerNames)
+    limitations.push(`${unresolvedPlayerNames} transaction player names could not be resolved from ESPN.`);
+
+  return {
+    available,
+    detailLevel: available ? 'player' : 'unavailable',
+    periodsRequested: requested,
+    periodsSupported: supported,
+    limitations
+  };
+}
+
+function playerCandidates(input: unknown): Record<string, unknown>[] {
+  const record = asRecord(input);
+  const pool = asRecord(record.playerPoolEntry);
+  return [asRecord(pool.player), asRecord(record.player), record, pool].filter(
+    (candidate) => Object.keys(candidate).length > 0
+  );
+}
+
+function firstString(candidates: Record<string, unknown>[], key: string): string | undefined {
+  for (const candidate of candidates) {
+    const value = asString(candidate[key]);
+    if (value) return value;
+  }
+  return undefined;
+}
+
+function teamLogo(team: Record<string, unknown>): string | undefined {
+  const direct = [team.logo, team.logoUrl, team.logoURL, team.teamLogo].map(asString).find(Boolean);
+  if (direct) return direct;
+  for (const input of asArray(team.logos)) {
+    const logo = asRecord(input);
+    const value = asString(logo.href) ?? asString(logo.url);
+    if (value) return value;
+  }
+  return undefined;
+}
+
+function resolvePlayer(input: unknown, players: Map<string, LeagueSagaHistoryPlayer>): LeagueSagaHistoryPlayer | null {
+  const direct = mapPlayer(input);
+  if (!direct) return null;
+  const known = players.get(direct.externalId);
+  if (!known) return direct;
+  if (direct.fullName.startsWith('ESPN Player ')) return known;
+  return {
+    ...known,
+    ...direct,
+    positions: direct.positions.length ? direct.positions : known.positions
+  };
 }
 
 function asRecord(input: unknown): Record<string, unknown> {
@@ -280,17 +516,6 @@ function buildMemberNameMap(members: unknown[]): Map<string, string> {
     if (id && name) result.set(id, name);
   }
   return result;
-}
-
-function playerFromId(input: unknown, players: Map<string, LeagueSagaHistoryPlayer>): LeagueSagaHistoryPlayer | null {
-  const id = asString(input);
-  return id
-    ? (players.get(id) ?? {
-        externalId: id,
-        fullName: `ESPN Player ${id}`,
-        positions: []
-      })
-    : null;
 }
 
 function positiveIdString(input: unknown): string | undefined {
@@ -335,6 +560,17 @@ const POSITION_NAMES: Record<number, string> = {
   16: 'D/ST'
 };
 
+const PUBLIC_POSITION_NAMES: Record<string, string> = {
+  quarterback: 'QB',
+  'running back': 'RB',
+  'wide receiver': 'WR',
+  'tight end': 'TE',
+  kicker: 'K',
+  defense: 'D/ST',
+  'defense/special teams': 'D/ST',
+  dst: 'D/ST'
+};
+
 function lineupSlotName(input: unknown): string | undefined {
   const id = numberOrUndefined(input);
   return id === undefined ? undefined : (LINEUP_SLOT_NAMES[id] ?? String(id));
@@ -343,6 +579,12 @@ function lineupSlotName(input: unknown): string | undefined {
 function playerPositions(player: Record<string, unknown>): string[] {
   const primary = numberOrUndefined(player.defaultPositionId);
   if (primary !== undefined) return [POSITION_NAMES[primary] ?? String(primary)];
+  const publicPosition = asRecord(player.position);
+  const publicPositionName = asString(publicPosition.abbreviation) ?? asString(publicPosition.displayName);
+  if (publicPositionName) {
+    const normalized = PUBLIC_POSITION_NAMES[publicPositionName.toLowerCase()] ?? publicPositionName;
+    return [normalized];
+  }
   return asArray(player.eligibleSlots)
     .map((slot) => numberOrUndefined(slot))
     .filter((slot): slot is number => slot !== undefined && POSITION_NAMES[slot] !== undefined)
@@ -358,6 +600,11 @@ function numberOrUndefined(input: unknown): number | undefined {
 function positiveIntegerOrUndefined(input: unknown): number | undefined {
   const value = numberOrUndefined(input);
   return value && Number.isInteger(value) && value > 0 ? value : undefined;
+}
+
+function nonnegativeIntegerOrUndefined(input: unknown): number | undefined {
+  const value = numberOrUndefined(input);
+  return value !== undefined && Number.isInteger(value) && value >= 0 ? value : undefined;
 }
 
 function dateFromMaybeEpoch(input: unknown): string | undefined {

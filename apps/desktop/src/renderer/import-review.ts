@@ -30,6 +30,17 @@ function createDeliverySeason(season: LeagueSagaHistorySeason, included: Include
     rosterEntries: included.rosterEntries ? season.rosterEntries : [],
     matchups: included.matchups ? season.matchups : [],
     draftPicks: included.draftPicks ? season.draftPicks : [],
-    transactions: included.transactions ? season.transactions : []
+    transactions: included.transactions ? season.transactions : [],
+    transactionCoverage: included.transactions
+      ? season.transactionCoverage
+      : {
+          available: false,
+          detailLevel: 'unavailable',
+          periodsRequested: 0,
+          periodsSupported: 0,
+          limitations: ['Transaction data was excluded by the user before upload.']
+        },
+    transactionSummaries: included.transactions ? season.transactionSummaries : [],
+    tradePartnerSummaries: included.transactions ? season.tradePartnerSummaries : []
   };
 }

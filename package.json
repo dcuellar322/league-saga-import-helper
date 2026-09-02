@@ -1,7 +1,7 @@
 {
   "name": "league-saga-import-helper-repo",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Secure desktop fantasy league import helper for LeagueSaga.",
   "license": "MIT",
   "workspaces": [

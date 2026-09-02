@@ -47,5 +47,5 @@ const [previewSchema, historySchema] = await Promise.all([
 await Promise.all([
   writeFile(join(distDir, 'leaguesaga-import-preview.schema.json'), previewSchema, 'utf-8'),
   writeFile(join(distDir, 'leaguesaga-history-import.schema.json'), historySchema, 'utf-8'),
-  writeFile(join(publicSchemaDir, 'leaguesaga-history-import-v0.2.schema.json'), historySchema, 'utf-8')
+  writeFile(join(publicSchemaDir, 'leaguesaga-history-import-v0.3.schema.json'), historySchema, 'utf-8')
 ]);

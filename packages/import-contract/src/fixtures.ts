@@ -61,6 +61,15 @@ export function createMockHistorySeason(
     ],
     draftPicks: [],
     transactions: [],
+    transactionCoverage: {
+      available: true,
+      detailLevel: 'player',
+      periodsRequested: 17,
+      periodsSupported: 17,
+      limitations: []
+    },
+    transactionSummaries: [],
+    tradePartnerSummaries: [],
     warnings: ['Mock history season for local development.']
   };
 
@@ -86,7 +95,7 @@ export function createMockHistoryImport(
     generatedAt: new Date().toISOString(),
     helper: {
       name: 'LeagueSaga Import Helper',
-      version: options.helperVersion ?? '0.2.0',
+      version: options.helperVersion ?? '0.3.0',
       platform: options.platform ?? 'mock'
     },
     importSessionId: options.importSessionId,

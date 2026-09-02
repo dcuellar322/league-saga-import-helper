@@ -47,6 +47,18 @@ describe('ESPN payload transform', () => {
             logo: 'https://cdn.example.com/logo.png',
             playoffSeed: 0,
             finalStanding: '1',
+            transactionCounter: {
+              trades: 2,
+              acquisitions: 13,
+              drops: 11,
+              acquisitionBudgetSpent: 27,
+              moveToActive: 3,
+              moveToIR: 4,
+              paid: 5,
+              teamCharges: 6,
+              misc: 7
+            },
+            matchupAcquisitionTotals: { 1: 2, 2: 3 },
             roster: {
               entries: [
                 {
@@ -155,6 +167,21 @@ describe('ESPN payload transform', () => {
     });
     expect(bundle.transactions[0]?.items[0]?.type).toBe('add');
     expect(bundle.transactions[0]?.items[0]?.player?.fullName).toBe('Demo Quarterback');
+    expect(bundle.transactions[0]).toMatchObject({ type: 'free_agent' });
+    expect(bundle.transactions[0]?.items[0]).toMatchObject({ toTeamExternalId: '1' });
+    expect(bundle.transactionSummaries[0]).toEqual({
+      teamExternalId: '1',
+      trades: 2,
+      acquisitions: 13,
+      drops: 11,
+      acquisitionBudgetSpent: 27,
+      moveToActive: 3,
+      moveToIR: 4,
+      paid: 5,
+      teamCharges: 6,
+      misc: 7,
+      matchupAcquisitionTotals: { 1: 2, 2: 3 }
+    });
   });
 
   it('rejects ESPN responses that contain no usable teams', () => {
@@ -261,12 +288,16 @@ describe('ESPN payload transform', () => {
           ]
         },
         transactions: [
-          { transactionId: 1, processDate: '1767225600000', items: [{ type: 'DROP', fromTeamId: '10' }] },
-          { transactionId: 2, date: 'invalid', items: [{ type: 'TRADE', toTeamId: '10' }] },
-          { transactionId: 3, items: [{ type: 'DRAFT' }] },
-          { transactionId: 4, items: [{ type: 'WAIVER' }] },
-          { transactionId: 5, items: [{ type: 'FREE' }] },
-          { transactionId: 6, items: [{ type: 'UNKNOWN' }] },
+          {
+            transactionId: 1,
+            processDate: '1767225600000',
+            items: [{ type: 'DROP', fromTeamId: '10', playerId: 1 }]
+          },
+          { transactionId: 2, date: 'invalid', items: [{ type: 'TRADE', toTeamId: '10', playerId: 2 }] },
+          { transactionId: 3, items: [{ type: 'DRAFT', toTeamId: '10', playerId: 3 }] },
+          { transactionId: 4, items: [{ type: 'WAIVER', toTeamId: '10', playerId: 4 }] },
+          { transactionId: 5, items: [{ type: 'FREE', toTeamId: '10', playerId: 5 }] },
+          { transactionId: 6, items: [{ type: 'UNKNOWN', fromTeamId: '10', playerId: 6 }] },
           { items: [{ type: 'ADD' }] }
         ]
       },
@@ -318,5 +349,114 @@ describe('ESPN payload transform', () => {
     expect(bundle.warnings).toContain(
       '1 draft or transaction player names were unavailable; ESPN player IDs were preserved for matching.'
     );
+  });
+
+  it('maps enriched players, standings, inferred winners, and completed trades into the import contract', () => {
+    const bundle = transformEspnPayload(
+      {
+        settings: { name: 'Complete History League' },
+        teams: [
+          { id: 1, name: 'One', rankCalculatedFinal: 2 },
+          { id: 2, name: 'Two', rankFinal: 1 }
+        ],
+        schedule: [
+          {
+            id: 10,
+            matchupPeriodId: 1,
+            home: { teamId: 1, totalPoints: 91 },
+            away: { teamId: 2, totalPoints: 104 }
+          }
+        ],
+        players: [{ player: { id: 777, fullName: 'Resolved Veteran', defaultPositionId: 3 } }],
+        draftDetail: {
+          picks: [{ overallPickNumber: 1, roundId: 1, roundPickNumber: 1, teamId: 1, playerId: 777 }]
+        },
+        transactions: [
+          {
+            id: 'proposal-1',
+            type: 'TRADE_PROPOSAL',
+            proposedDate: 1760000000000,
+            items: [{ type: 'TRADE', fromTeamId: 1, toTeamId: 2, playerId: 777 }]
+          },
+          {
+            id: 'accept-1',
+            relatedTransactionId: 'proposal-1',
+            type: 'TRADE_ACCEPT',
+            status: 'EXECUTED',
+            processDate: 1760000100000,
+            items: []
+          },
+          {
+            id: 'uphold-1',
+            relatedTransactionId: 'proposal-1',
+            type: 'TRADE_UPHOLD',
+            status: 'EXECUTED',
+            processDate: 1760000200000,
+            items: []
+          },
+          {
+            id: 'free-agent-1',
+            type: 'FREEAGENT',
+            items: [{ type: 'FREEAGENT ADD', toTeamId: 2, playerId: 777 }]
+          }
+        ],
+        __leagueSagaImportHelper: {
+          transactionHistoryAvailable: true,
+          transactionPeriodsRequested: 2,
+          transactionPeriodsSupported: 1
+        }
+      },
+      { ...context, season: 2025 }
+    );
+
+    expect(bundle.teams.map((team) => team.finalStanding)).toEqual([2, 1]);
+    expect(bundle.matchups[0]?.winnerTeamExternalId).toBe('2');
+    expect(bundle.draftPicks[0]?.player).toMatchObject({ fullName: 'Resolved Veteran', positions: ['WR'] });
+    expect(bundle.transactions.map((transaction) => transaction.externalId)).toEqual(['proposal-1', 'free-agent-1']);
+    expect(bundle.transactions[0]).toMatchObject({
+      status: 'EXECUTED',
+      items: [
+        {
+          type: 'trade',
+          fromTeamExternalId: '1',
+          toTeamExternalId: '2',
+          player: { externalId: '777', fullName: 'Resolved Veteran' }
+        }
+      ]
+    });
+    expect(bundle.transactionCoverage).toEqual({
+      available: true,
+      detailLevel: 'player',
+      periodsRequested: 2,
+      periodsSupported: 1,
+      limitations: ['ESPN returned transaction data for 1 of 2 scoring periods.']
+    });
+    expect(bundle.tradePartnerSummaries).toEqual([{ teamAExternalId: '1', teamBExternalId: '2', trades: 1 }]);
+    expect(bundle.warnings).toContain('ESPN returned transaction data for 1 of 2 scoring periods.');
+    expect(bundle.warnings.some((warning) => warning.includes('player names were unavailable'))).toBe(false);
+  });
+
+  it('reports the pre-2018 ESPN transaction coverage limit', () => {
+    const bundle = transformEspnPayload(
+      {
+        settings: { name: 'Legacy League' },
+        teams: [{ id: 1, name: 'One' }],
+        __leagueSagaImportHelper: {
+          transactionHistoryAvailable: false,
+          transactionPeriodsRequested: 0,
+          transactionPeriodsSupported: 0
+        }
+      },
+      { ...context, season: 2017 }
+    );
+
+    expect(bundle.warnings).toContain('ESPN player-level transaction history is unavailable before 2018.');
+    expect(bundle.transactionCoverage).toEqual({
+      available: false,
+      detailLevel: 'unavailable',
+      periodsRequested: 0,
+      periodsSupported: 0,
+      limitations: ['ESPN player-level transaction history is unavailable before 2018.']
+    });
   });
 });

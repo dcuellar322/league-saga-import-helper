@@ -33,7 +33,7 @@ ESPN, Disney, or the NFL. Your use of ESPN remains subject to ESPN's and Disney'
 - The helper does not read Chrome, Safari, Firefox, or system browser cookie stores.
 - The helper does not upload raw ESPN cookies to LeagueSaga.
 - ESPN cookies are used locally only to request fantasy data from ESPN.
-- Historical import packages can include league, team, roster, matchup, draft, and transaction data returned by ESPN for every discovered season.
+- Historical import packages can include league, team, roster, matchup, draft, and transaction data returned by ESPN for every discovered season. For seasons from 2018 onward, the helper checks every ESPN scoring period for transaction events and resolves referenced player names when ESPN exposes them.
 
 See [docs/PRIVACY.md](docs/PRIVACY.md), [docs/SECURITY.md](docs/SECURITY.md), and
 [docs/THIRD-PARTY-SERVICES.md](docs/THIRD-PARTY-SERVICES.md) for more detail.
@@ -147,8 +147,9 @@ scripts/                  Maintenance scripts
 
 ## Import Contract
 
-The shared `@leaguesaga/import-contract` package defines the compact, provider-neutral `0.2.0`
-history package. This is the first public contract version. Each season is validated independently.
+The shared `@leaguesaga/import-contract` package defines the provider-neutral `0.3.0` history
+package. Each season is validated independently and carries transaction coverage, authoritative
+team counters, trade-partner counts, and player movement events.
 Provider response shapes can change, so provider-specific parsing stays inside its adapter while
 the public contract remains stable or is intentionally versioned.
 
