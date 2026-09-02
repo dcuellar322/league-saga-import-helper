@@ -54,13 +54,13 @@ The release workflow combines all native artifacts, generates `SHA256SUMS.txt`, 
 ## Suggested release naming
 
 ```text
-LeagueLore Import Helper v0.1.0
+LeagueSaga Import Helper v0.1.0
 
 Assets:
-- LeagueLoreImportHelper-0.1.0-mac-arm64.dmg
-- LeagueLoreImportHelper-0.1.0-mac-x64.dmg
-- LeagueLoreImportHelper-0.1.0-win-x64.exe
-- LeagueLoreImportHelper-0.1.0-linux-x64.AppImage, .deb, or .zip
+- LeagueSagaImportHelper-0.1.0-mac-arm64.dmg
+- LeagueSagaImportHelper-0.1.0-mac-x64.dmg
+- LeagueSagaImportHelper-0.1.0-win-x64.exe
+- LeagueSagaImportHelper-0.1.0-linux-x64.AppImage, .deb, or .zip
 - SHA256SUMS.txt
 ```
 
@@ -69,14 +69,14 @@ Assets:
 Before announcing a release:
 
 1. Install each native artifact on a clean supported OS.
-2. Launch with a `leaguelore-import://start` link containing the canonical portal
+2. Launch with a `leaguesaga-import://start` link containing the canonical portal
    API base and confirm league, season, session ID, and token handoff.
 3. Complete a sanitized end-to-end preview against the production API.
 4. Verify macOS notarization with `xcrun stapler validate` and Windows signatures with `Get-AuthenticodeSignature`.
 5. Confirm the packaged fuse report disables Node injection/inspection and enforces encrypted cookies and ASAR integrity.
 
-The manually dispatched **Production upload smoke test** workflow requires approval through the `production-smoke` GitHub environment plus a newly issued one-time `LEAGUELORE_SMOKE_TOKEN` and `LEAGUELORE_SMOKE_SESSION_ID`. It uploads a sanitized minimal ESPN-shaped bundle, prints only the HTTP status, and rejects continuation URLs outside LeagueLore. Run it before promoting a public release; the preview it creates can then be deleted through the normal LeagueLore flow.
+The manually dispatched **Production upload smoke test** workflow requires approval through the `production-smoke` GitHub environment plus a newly issued one-time `LEAGUESAGA_SMOKE_TOKEN` and `LEAGUESAGA_SMOKE_SESSION_ID`. It uploads a sanitized minimal ESPN-shaped bundle, prints only the HTTP status, and rejects continuation URLs outside LeagueSaga. Run it before promoting a public release; the preview it creates can then be deleted through the normal LeagueSaga flow.
 
-The production API and continuation origin is `https://portal.leagueloreapp.com`. A release is
+The production API and continuation origin is `https://portal.leaguesaga.com`. A release is
 blocked if a packaged deep link, upload, or continuation targets the marketing hostname, apex
 hostname, localhost, or an unrelated origin.

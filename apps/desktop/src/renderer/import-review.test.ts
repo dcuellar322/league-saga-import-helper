@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createMockImportBundle, validateImportBundle } from '@leaguelore/import-contract';
+import { createMockImportBundle, validateImportBundle } from '@leaguesaga/import-contract';
 import { createDeliveryBundle, DEFAULT_INCLUDED_CATEGORIES } from './import-review.js';
 
 describe('renderer import review helpers', () => {

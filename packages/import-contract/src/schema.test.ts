@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { createMockImportBundle } from './fixtures';
 import { safeValidateImportBundle, validateImportBundle } from './validate';
 
-describe('LeagueLore import contract', () => {
+describe('LeagueSaga import contract', () => {
   it('validates the bundled mock import fixture', () => {
     const bundle = validateImportBundle(createMockImportBundle());
 
     expect(bundle.metadata.source).toBe('mock');
-    expect(bundle.league.name).toBe('LeagueLore Demo League');
+    expect(bundle.league.name).toBe('LeagueSaga Demo League');
     expect(bundle.teams).toHaveLength(2);
     expect(bundle.matchups[0]?.winnerTeamExternalId).toBe('1');
   });

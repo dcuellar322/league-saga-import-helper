@@ -18,7 +18,7 @@ describe('release update checks', () => {
         new Response(
           JSON.stringify({
             tag_name: 'v0.2.0',
-            html_url: 'https://github.com/dcuellar322/leaguelore-import-helper/releases/tag/v0.2.0'
+            html_url: 'https://github.com/dcuellar322/league-saga-import-helper/releases/tag/v0.2.0'
           }),
           { status: 200 }
         )

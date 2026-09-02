@@ -115,7 +115,7 @@ export const TransactionSchema = z.object({
   notes: z.string().optional()
 });
 
-export const LeagueLoreImportBundleSchema = z
+export const LeagueSagaImportBundleSchema = z
   .object({
     metadata: ImportMetadataSchema,
     league: LeagueSchema,
@@ -239,7 +239,7 @@ export const LeagueLoreImportBundleSchema = z
     }
   });
 
-export const LeagueLoreImportPreviewSchema = z.object({
+export const LeagueSagaImportPreviewSchema = z.object({
   importSessionId: z.string().min(1),
   contractVersion: z.literal(IMPORT_CONTRACT_VERSION),
   leagueName: z.string().min(1),
@@ -256,11 +256,11 @@ export const LeagueLoreImportPreviewSchema = z.object({
 
 export type ImportProvider = z.infer<typeof ImportProviderSchema>;
 export type ExternalRef = z.infer<typeof ExternalRefSchema>;
-export type LeagueLoreImportBundle = z.infer<typeof LeagueLoreImportBundleSchema>;
-export type LeagueLoreImportPreview = z.infer<typeof LeagueLoreImportPreviewSchema>;
-export type LeagueLoreImportTeam = z.infer<typeof TeamSchema>;
-export type LeagueLoreImportPlayer = z.infer<typeof PlayerSchema>;
-export type LeagueLoreRosterEntry = z.infer<typeof RosterEntrySchema>;
-export type LeagueLoreMatchup = z.infer<typeof MatchupSchema>;
-export type LeagueLoreDraftPick = z.infer<typeof DraftPickSchema>;
-export type LeagueLoreTransaction = z.infer<typeof TransactionSchema>;
+export type LeagueSagaImportBundle = z.infer<typeof LeagueSagaImportBundleSchema>;
+export type LeagueSagaImportPreview = z.infer<typeof LeagueSagaImportPreviewSchema>;
+export type LeagueSagaImportTeam = z.infer<typeof TeamSchema>;
+export type LeagueSagaImportPlayer = z.infer<typeof PlayerSchema>;
+export type LeagueSagaRosterEntry = z.infer<typeof RosterEntrySchema>;
+export type LeagueSagaMatchup = z.infer<typeof MatchupSchema>;
+export type LeagueSagaDraftPick = z.infer<typeof DraftPickSchema>;
+export type LeagueSagaTransaction = z.infer<typeof TransactionSchema>;

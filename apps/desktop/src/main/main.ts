@@ -16,7 +16,7 @@ let mainWindow: BrowserWindow | null = null;
 let pendingDeepLink: DeepLinkSettings | null = null;
 let rendererReady = false;
 
-const protocolName = 'leaguelore-import';
+const protocolName = 'leaguesaga-import';
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
@@ -60,8 +60,8 @@ async function createWindow(): Promise<void> {
     height: 860,
     minWidth: 760,
     minHeight: 620,
-    title: 'LeagueLore Import Helper',
-    backgroundColor: '#061329',
+    title: 'LeagueSaga Import Helper',
+    backgroundColor: '#07152c',
     show: false,
     webPreferences: {
       preload: join(__dirname, '../preload/preload.js'),
@@ -97,7 +97,7 @@ async function runPackagedSmokeTest(window: BrowserWindow): Promise<void> {
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
     return {
-      hasBridge: Boolean(window.leagueLore),
+      hasBridge: Boolean(window.leagueSaga),
       hasHeading: document.body.textContent.includes('Confirm your league'),
       hasDeepLinkLeague: Array.from(document.querySelectorAll('input')).some((input) => input.value === '424242')
     };

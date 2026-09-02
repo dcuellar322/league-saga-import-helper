@@ -5,8 +5,8 @@ const [, , outputPath, expression = ''] = process.argv;
 if (!outputPath) throw new Error('Usage: node scripts/capture-cdp.mjs <output.png> [expression]');
 
 const targets = await fetch('http://127.0.0.1:9222/json/list').then((response) => response.json());
-const target = targets.find((candidate) => candidate.type === 'page' && candidate.title === 'LeagueLore Import Helper');
-if (!target?.webSocketDebuggerUrl) throw new Error('LeagueLore renderer target was not found.');
+const target = targets.find((candidate) => candidate.type === 'page' && candidate.title === 'LeagueSaga Import Helper');
+if (!target?.webSocketDebuggerUrl) throw new Error('LeagueSaga renderer target was not found.');
 
 const socket = new WebSocket(target.webSocketDebuggerUrl);
 let commandId = 0;

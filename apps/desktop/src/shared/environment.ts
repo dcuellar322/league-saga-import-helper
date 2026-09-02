@@ -1,8 +1,8 @@
-export const LEAGUELORE_DEV_API_BASE_URL = 'http://localhost:15173';
-export const LEAGUELORE_PRODUCTION_API_BASE_URL = 'https://portal.leagueloreapp.com';
+export const LEAGUESAGA_DEV_API_BASE_URL = 'http://localhost:15173';
+export const LEAGUESAGA_PRODUCTION_API_BASE_URL = 'https://portal.leaguesaga.com';
 
-export function defaultLeagueLoreApiBaseUrl(isPackaged: boolean): string {
-  return isPackaged ? LEAGUELORE_PRODUCTION_API_BASE_URL : LEAGUELORE_DEV_API_BASE_URL;
+export function defaultLeagueSagaApiBaseUrl(isPackaged: boolean): string {
+  return isPackaged ? LEAGUESAGA_PRODUCTION_API_BASE_URL : LEAGUESAGA_DEV_API_BASE_URL;
 }
 
 export function currentSeasonYear(): number {

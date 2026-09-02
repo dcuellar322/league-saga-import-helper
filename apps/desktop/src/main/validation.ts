@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import type { HelperSettings } from '../shared/ipc.js';
 
-const PRODUCTION_API_HOSTS = new Set(['portal.leagueloreapp.com']);
+const PRODUCTION_API_HOSTS = new Set(['portal.leaguesaga.com']);
 const LOCAL_API_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
-const DEEP_LINK_PROTOCOL = 'leaguelore-import:';
+const DEEP_LINK_PROTOCOL = 'leaguesaga-import:';
 
 type UrlValidationOptions = {
   allowLocalhost: boolean;
@@ -36,7 +36,7 @@ export function normalizeApiBaseUrl(input: string, options: UrlValidationOptions
   const parsed = new URL(input.trim());
 
   if (parsed.username || parsed.password || parsed.search || parsed.hash) {
-    throw new Error('LeagueLore API URL must not contain credentials, query parameters, or fragments.');
+    throw new Error('LeagueSaga API URL must not contain credentials, query parameters, or fragments.');
   }
 
   const path = parsed.pathname.replace(/\/+$/, '');
@@ -54,7 +54,7 @@ export function normalizeApiBaseUrl(input: string, options: UrlValidationOptions
     return normalized;
   }
 
-  throw new Error('LeagueLore API URL must be https://portal.leagueloreapp.com or a local development URL.');
+  throw new Error('LeagueSaga API URL must be https://portal.leaguesaga.com or a local development URL.');
 }
 
 export function isAllowedLocalRendererUrl(input: string): boolean {
@@ -129,13 +129,13 @@ export function parseDeepLinkSettings(input: string, options: UrlValidationOptio
   }
 }
 
-export function normalizeLeagueLoreNavigationUrl(input: string, options: UrlValidationOptions): string {
+export function normalizeLeagueSagaNavigationUrl(input: string, options: UrlValidationOptions): string {
   const parsed = new URL(input.trim());
   if (parsed.username || parsed.password || (parsed.protocol !== 'https:' && parsed.protocol !== 'http:')) {
-    throw new Error('Invalid LeagueLore continuation URL.');
+    throw new Error('Invalid LeagueSaga continuation URL.');
   }
   const production = parsed.protocol === 'https:' && PRODUCTION_API_HOSTS.has(parsed.hostname);
   const local = options.allowLocalhost && LOCAL_API_HOSTS.has(parsed.hostname);
-  if (!production && !local) throw new Error('Invalid LeagueLore continuation URL.');
+  if (!production && !local) throw new Error('Invalid LeagueSaga continuation URL.');
   return parsed.toString();
 }

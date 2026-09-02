@@ -1,14 +1,14 @@
 import {
   IMPORT_CONTRACT_VERSION,
   validateImportBundle,
-  type LeagueLoreImportBundle,
-  type LeagueLoreDraftPick,
-  type LeagueLoreImportPlayer,
-  type LeagueLoreImportTeam,
-  type LeagueLoreMatchup,
-  type LeagueLoreRosterEntry,
-  type LeagueLoreTransaction
-} from '@leaguelore/import-contract';
+  type LeagueSagaImportBundle,
+  type LeagueSagaDraftPick,
+  type LeagueSagaImportPlayer,
+  type LeagueSagaImportTeam,
+  type LeagueSagaMatchup,
+  type LeagueSagaRosterEntry,
+  type LeagueSagaTransaction
+} from '@leaguesaga/import-contract';
 
 export type TransformContext = {
   leagueId: string;
@@ -18,7 +18,7 @@ export type TransformContext = {
   platform: string;
 };
 
-export function transformEspnPayload(payload: unknown, context: TransformContext): LeagueLoreImportBundle {
+export function transformEspnPayload(payload: unknown, context: TransformContext): LeagueSagaImportBundle {
   const data = asRecord(payload);
   const leagueExternalId = String(data.id ?? context.leagueId);
   const settings = asRecord(data.settings);
@@ -31,18 +31,18 @@ export function transformEspnPayload(payload: unknown, context: TransformContext
 
   const teams = teamsRaw
     .map((team) => mapTeam(team, leagueExternalId, memberNames))
-    .filter(Boolean) as LeagueLoreImportTeam[];
+    .filter(Boolean) as LeagueSagaImportTeam[];
   const rosterEntries = teamsRaw.flatMap((team) => mapRosterEntries(team));
   const playerLookup = new Map(rosterEntries.map((entry) => [entry.player.externalRef.externalId, entry.player]));
   const matchups = scheduleRaw
     .map((matchup) => mapMatchup(matchup, leagueExternalId, context.season))
-    .filter(Boolean) as LeagueLoreMatchup[];
+    .filter(Boolean) as LeagueSagaMatchup[];
   const draftPicks = asArray(draftDetail.picks)
     .map((pick) => mapDraftPick(pick, leagueExternalId, context.season, playerLookup))
-    .filter(Boolean) as LeagueLoreDraftPick[];
+    .filter(Boolean) as LeagueSagaDraftPick[];
   const transactions = transactionsRaw
     .map((transaction) => mapTransaction(transaction, leagueExternalId, context.season, playerLookup))
-    .filter(Boolean) as LeagueLoreTransaction[];
+    .filter(Boolean) as LeagueSagaTransaction[];
 
   if (!teams.length) {
     throw new Error('ESPN returned no teams. Check the league ID, season, and account access, then try again.');
@@ -62,14 +62,14 @@ export function transformEspnPayload(payload: unknown, context: TransformContext
       `${unresolvedPlayers} draft or transaction player names were unavailable; ESPN player IDs were preserved for matching.`
     );
 
-  const bundle: LeagueLoreImportBundle = {
+  const bundle: LeagueSagaImportBundle = {
     metadata: {
       contractVersion: IMPORT_CONTRACT_VERSION,
       source: 'espn',
       generatedAt: new Date().toISOString(),
       importSessionId: context.importSessionId,
       helper: {
-        name: 'LeagueLore Import Helper',
+        name: 'LeagueSaga Import Helper',
         version: context.helperVersion,
         platform: context.platform
       },
@@ -108,7 +108,7 @@ function mapTeam(
   input: unknown,
   leagueExternalId: string,
   memberNames: Map<string, string>
-): LeagueLoreImportTeam | null {
+): LeagueSagaImportTeam | null {
   const team = asRecord(input);
   const id = asString(team.id) ?? asString(team.teamId);
   if (!id) return null;
@@ -132,7 +132,7 @@ function mapTeam(
   };
 }
 
-function mapRosterEntries(input: unknown): LeagueLoreRosterEntry[] {
+function mapRosterEntries(input: unknown): LeagueSagaRosterEntry[] {
   const team = asRecord(input);
   const teamId = asString(team.id) ?? asString(team.teamId);
   if (!teamId) return [];
@@ -155,7 +155,7 @@ function mapRosterEntries(input: unknown): LeagueLoreRosterEntry[] {
   });
 }
 
-function mapPlayer(input: unknown): LeagueLoreImportPlayer | null {
+function mapPlayer(input: unknown): LeagueSagaImportPlayer | null {
   const player = asRecord(input);
   const id = asString(player.id) ?? asString(player.playerId);
   if (!id) return null;
@@ -175,7 +175,7 @@ function mapPlayer(input: unknown): LeagueLoreImportPlayer | null {
   };
 }
 
-function mapMatchup(input: unknown, leagueExternalId: string, season: number): LeagueLoreMatchup | null {
+function mapMatchup(input: unknown, leagueExternalId: string, season: number): LeagueSagaMatchup | null {
   const matchup = asRecord(input);
   const id =
     asString(matchup.id) ??
@@ -218,8 +218,8 @@ function mapDraftPick(
   input: unknown,
   leagueExternalId: string,
   season: number,
-  players: Map<string, LeagueLoreImportPlayer>
-): LeagueLoreDraftPick | null {
+  players: Map<string, LeagueSagaImportPlayer>
+): LeagueSagaDraftPick | null {
   const pick = asRecord(input);
   const overallPick = positiveIntegerOrUndefined(pick.overallPickNumber) ?? positiveIntegerOrUndefined(pick.pickNumber);
   const teamExternalId = positiveIdString(pick.teamId);
@@ -249,8 +249,8 @@ function mapTransaction(
   input: unknown,
   leagueExternalId: string,
   season: number,
-  players: Map<string, LeagueLoreImportPlayer>
-): LeagueLoreTransaction | null {
+  players: Map<string, LeagueSagaImportPlayer>
+): LeagueSagaTransaction | null {
   const tx = asRecord(input);
   const id = asString(tx.id) ?? asString(tx.transactionId);
   if (!id) return null;
@@ -319,7 +319,7 @@ function buildMemberNameMap(members: unknown[]): Map<string, string> {
   return result;
 }
 
-function playerFromId(input: unknown, players: Map<string, LeagueLoreImportPlayer>): LeagueLoreImportPlayer | null {
+function playerFromId(input: unknown, players: Map<string, LeagueSagaImportPlayer>): LeagueSagaImportPlayer | null {
   const id = asString(input);
   return id
     ? (players.get(id) ?? {

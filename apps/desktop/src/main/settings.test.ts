@@ -15,7 +15,7 @@ let userData = '';
 
 describe('helper settings persistence', () => {
   beforeEach(async () => {
-    userData = await mkdtemp(join(tmpdir(), 'leaguelore-settings-'));
+    userData = await mkdtemp(join(tmpdir(), 'leaguesaga-settings-'));
     electronApp.isPackaged = false;
     electronApp.getPath.mockReturnValue(userData);
     vi.unstubAllEnvs();
@@ -59,8 +59,8 @@ describe('helper settings persistence', () => {
 
   it('recovers from corrupt files and honors explicit development environment values', async () => {
     await writeFile(join(userData, 'settings.json'), '{not-json', 'utf-8');
-    vi.stubEnv('LEAGUELORE_API_BASE', 'http://127.0.0.1:15173/api');
-    vi.stubEnv('LEAGUELORE_IMPORT_TOKEN', 'environment-token');
+    vi.stubEnv('LEAGUESAGA_API_BASE', 'http://127.0.0.1:15173/api');
+    vi.stubEnv('LEAGUESAGA_IMPORT_TOKEN', 'environment-token');
 
     await expect(readSettings()).resolves.toMatchObject({
       apiBaseUrl: 'http://127.0.0.1:15173/api',

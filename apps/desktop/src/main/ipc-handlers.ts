@@ -2,15 +2,15 @@ import { app, dialog, ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { platform } from 'node:process';
-import { createMockImportBundle, validateImportBundle } from '@leaguelore/import-contract';
+import { createMockImportBundle, validateImportBundle } from '@leaguesaga/import-contract';
 import type { DeepLinkSettings, HelperSettings, ImportParams, UploadParams } from '../shared/ipc.js';
-import { currentSeasonYear, defaultLeagueLoreApiBaseUrl } from '../shared/environment.js';
+import { currentSeasonYear, defaultLeagueSagaApiBaseUrl } from '../shared/environment.js';
 import { clearEspnSession, getEspnSessionStatus } from './espn/cookies.js';
 import { closeEspnLoginWindow, openEspnLoginWindow } from './espn/login-window.js';
 import { fetchEspnLeaguePayload } from './espn/api.js';
 import { transformEspnPayload } from './espn/transform.js';
 import { exportDiagnostics, recordDiagnostic } from './diagnostics.js';
-import { openTrustedLeagueLoreUrl, openTrustedProjectUrl, openTrustedUpdateUrl } from './security.js';
+import { openTrustedLeagueSagaUrl, openTrustedProjectUrl, openTrustedUpdateUrl } from './security.js';
 import { readSettings, saveSettings } from './settings.js';
 import { checkForUpdates } from './updates.js';
 import { uploadBundle } from './upload.js';
@@ -27,7 +27,7 @@ let activeUpload: AbortController | null = null;
 export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
   handleTrusted(options, 'app:version', () => app.getVersion());
   handleTrusted(options, 'app:runtime-config', () => ({
-    apiBaseUrl: process.env.LEAGUELORE_API_BASE ?? defaultLeagueLoreApiBaseUrl(app.isPackaged),
+    apiBaseUrl: process.env.LEAGUESAGA_API_BASE ?? defaultLeagueSagaApiBaseUrl(app.isPackaged),
     isDevelopment: !app.isPackaged,
     mockImportsEnabled: !app.isPackaged
   }));
@@ -95,7 +95,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
         source: 'mock',
         generatedAt: new Date().toISOString(),
         helper: {
-          name: 'LeagueLore Import Helper',
+          name: 'LeagueSaga Import Helper',
           version: app.getVersion(),
           platform
         },
@@ -104,7 +104,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       },
       league: {
         externalRef: { provider: 'mock', externalId: parsedParams.leagueId },
-        name: 'LeagueLore Demo League',
+        name: 'LeagueSaga Demo League',
         season,
         size: 2,
         visibility: 'private',
@@ -117,10 +117,10 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     const bundle = validateImportBundle(input);
     const defaultPath = join(
       app.getPath('documents'),
-      `leaguelore-import-${bundle.league.season}-${bundle.league.externalRef.externalId}.json`
+      `leaguesaga-import-${bundle.league.season}-${bundle.league.externalRef.externalId}.json`
     );
     const result = await dialog.showSaveDialog({
-      title: 'Save LeagueLore Import Bundle',
+      title: 'Save LeagueSaga Import Bundle',
       defaultPath,
       filters: [{ name: 'JSON', extensions: ['json'] }]
     });
@@ -148,7 +148,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
   handleTrusted(options, 'bundle:cancel-upload', () => {
     activeUpload?.abort();
   });
-  handleTrusted(options, 'app:open-leaguelore-url', (url: string) => openTrustedLeagueLoreUrl(url));
+  handleTrusted(options, 'app:open-leaguesaga-url', (url: string) => openTrustedLeagueSagaUrl(url));
   handleTrusted(options, 'app:open-update-url', (url: string) => openTrustedUpdateUrl(url));
   handleTrusted(options, 'app:open-project-url', (url: string) => openTrustedProjectUrl(url));
   handleTrusted(options, 'app:check-for-updates', () => checkForUpdates());
@@ -157,7 +157,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       title: 'Save privacy-safe diagnostics',
       defaultPath: join(
         app.getPath('documents'),
-        `leaguelore-import-helper-diagnostics-${new Date().toISOString().slice(0, 10)}.jsonl`
+        `league-saga-import-helper-diagnostics-${new Date().toISOString().slice(0, 10)}.jsonl`
       ),
       filters: [{ name: 'JSON Lines', extensions: ['jsonl'] }]
     });

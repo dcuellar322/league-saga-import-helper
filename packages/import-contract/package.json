@@ -1,7 +1,7 @@
 {
-  "name": "@leaguelore/import-contract",
+  "name": "@leaguesaga/import-contract",
   "version": "0.1.0",
-  "description": "Shared LeagueLore import bundle contract.",
+  "description": "Shared LeagueSaga import bundle contract.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

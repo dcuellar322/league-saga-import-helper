@@ -1,10 +1,10 @@
-import { createMockImportBundle, validateImportBundle } from '@leaguelore/import-contract';
+import { createMockImportBundle, validateImportBundle } from '@leaguesaga/import-contract';
 
-const token = process.env.LEAGUELORE_SMOKE_TOKEN;
-const productionApiBase = 'https://portal.leagueloreapp.com';
-const apiBase = (process.env.LEAGUELORE_SMOKE_API_BASE ?? productionApiBase).replace(/\/$/, '');
-const importSessionId = process.env.LEAGUELORE_SMOKE_SESSION_ID;
-if (!token || !importSessionId) throw new Error('LEAGUELORE_SMOKE_TOKEN and LEAGUELORE_SMOKE_SESSION_ID are required.');
+const token = process.env.LEAGUESAGA_SMOKE_TOKEN;
+const productionApiBase = 'https://portal.leaguesaga.com';
+const apiBase = (process.env.LEAGUESAGA_SMOKE_API_BASE ?? productionApiBase).replace(/\/$/, '');
+const importSessionId = process.env.LEAGUESAGA_SMOKE_SESSION_ID;
+if (!token || !importSessionId) throw new Error('LEAGUESAGA_SMOKE_TOKEN and LEAGUESAGA_SMOKE_SESSION_ID are required.');
 if (apiBase !== productionApiBase) throw new Error(`The production smoke test only permits ${productionApiBase}.`);
 
 const generated = createMockImportBundle();
@@ -20,7 +20,7 @@ const bundle = validateImportBundle({
   league: {
     ...generated.league,
     externalRef: { provider: 'espn', externalId: leagueExternalId },
-    name: 'LeagueLore Release Smoke Test'
+    name: 'LeagueSaga Release Smoke Test'
   },
   teams: generated.teams.map((team) => ({
     ...team,
@@ -35,7 +35,7 @@ const bundle = validateImportBundle({
 
 const response = await fetch(`${apiBase}/api/import-helper/espn/preview`, {
   method: 'POST',
-  headers: { 'content-type': 'application/json', accept: 'application/json', 'x-leaguelore-import-token': token },
+  headers: { 'content-type': 'application/json', accept: 'application/json', 'x-leaguesaga-import-token': token },
   body: JSON.stringify(bundle),
   signal: AbortSignal.timeout(30_000)
 });

@@ -1,9 +1,9 @@
-import { LeagueLoreImportBundleSchema, type LeagueLoreImportBundle } from './schema.js';
+import { LeagueSagaImportBundleSchema, type LeagueSagaImportBundle } from './schema.js';
 
-export function validateImportBundle(input: unknown): LeagueLoreImportBundle {
-  return LeagueLoreImportBundleSchema.parse(input);
+export function validateImportBundle(input: unknown): LeagueSagaImportBundle {
+  return LeagueSagaImportBundleSchema.parse(input);
 }
 
 export function safeValidateImportBundle(input: unknown) {
-  return LeagueLoreImportBundleSchema.safeParse(input);
+  return LeagueSagaImportBundleSchema.safeParse(input);
 }

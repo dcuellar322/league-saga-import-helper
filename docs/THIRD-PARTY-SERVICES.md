@@ -1,8 +1,8 @@
 # Third-Party Services
 
-Effective August 12, 2026
+Effective August 31, 2026
 
-Cuellar Labs LLC operates LeagueLore and distributes the LeagueLore Import Helper. The helper uses
+Cuellar Labs LLC operates LeagueSaga and distributes the LeagueSaga Import Helper. The helper uses
 services that Cuellar Labs LLC does not control.
 
 ## ESPN and Disney
@@ -14,12 +14,12 @@ Disney's terms and privacy policies apply to your ESPN account and your use of t
 The helper does not give you or Cuellar Labs LLC a license to ESPN or Disney content. Cuellar Labs
 LLC can limit or remove the ESPN import if a provider requirement changes or access is withdrawn.
 
-## LeagueLore
+## LeagueSaga
 
-An upload sends the league information that you approve to LeagueLore. The LeagueLore
-[Terms of Service](https://www.leagueloreapp.com/terms-of-service/),
-[Privacy Policy](https://www.leagueloreapp.com/privacy-policy/), and
-[Import Privacy notice](https://www.leagueloreapp.com/import-privacy/) apply to that upload and the
+An upload sends the league information that you approve to LeagueSaga. The LeagueSaga
+[Terms of Service](https://www.leaguesaga.com/terms-of-service/),
+[Privacy Policy](https://www.leaguesaga.com/privacy-policy/), and
+[Import Privacy notice](https://www.leaguesaga.com/import-privacy/) apply to that upload and the
 hosted service.
 
 ## GitHub
@@ -30,6 +30,6 @@ privacy policy apply to its service.
 
 ## No affiliation
 
-LeagueLore and the Import Helper are independent. They are not affiliated with, endorsed by,
+LeagueSaga and the Import Helper are independent. They are not affiliated with, endorsed by,
 sponsored by, or approved by ESPN, Disney, the NFL, or GitHub. Third-party names and marks identify
 the relevant service or compatibility and remain the property of their owners.

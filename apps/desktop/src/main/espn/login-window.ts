@@ -23,15 +23,15 @@ export async function openEspnLoginWindow(params: OpenEspnLoginParams): Promise<
   });
 
   loginWindow = new BrowserWindow({
-    title: 'Sign in to ESPN - LeagueLore Import Helper',
+    title: 'Sign in to ESPN - LeagueSaga Import Helper',
     width: 1120,
     height: 860,
     minWidth: 900,
     minHeight: 700,
     show: false,
-    backgroundColor: '#061329',
+    backgroundColor: '#07152c',
     webPreferences: {
-      partition: 'leaguelore-espn-import',
+      partition: 'leaguesaga-espn-import',
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,

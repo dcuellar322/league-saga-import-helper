@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { LeagueLoreImportBundle } from '@leaguelore/import-contract';
+import type { LeagueSagaImportBundle } from '@leaguesaga/import-contract';
 import type {
   DeepLinkSettings,
   HelperSettings,
@@ -8,8 +8,8 @@ import type {
   UpdateInfo,
   UploadResult
 } from '../shared/ipc';
-import { currentSeasonYear, defaultLeagueLoreApiBaseUrl } from '../shared/environment';
-import leagueLoreLogoUrl from '../../assets/league-lore-mark.png';
+import { currentSeasonYear, defaultLeagueSagaApiBaseUrl } from '../shared/environment';
+import leagueSagaLogoUrl from '../../assets/league-saga-mark.png';
 import { createDeliveryBundle, DEFAULT_INCLUDED_CATEGORIES, type IncludedCategories } from './import-review';
 import { formatError } from './errors';
 import {
@@ -38,7 +38,7 @@ const DEFAULT_STATUS: SessionStatus = {
 };
 
 const DEFAULT_SETTINGS: HelperSettings = {
-  apiBaseUrl: defaultLeagueLoreApiBaseUrl(true),
+  apiBaseUrl: defaultLeagueSagaApiBaseUrl(true),
   importToken: '',
   leagueId: '',
   season: currentSeasonYear()
@@ -56,7 +56,7 @@ export default function App() {
   const [step, setStep] = useState<Step>('setup');
   const [settings, setSettings] = useState<HelperSettings>(DEFAULT_SETTINGS);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>(DEFAULT_STATUS);
-  const [bundle, setBundle] = useState<LeagueLoreImportBundle | null>(null);
+  const [bundle, setBundle] = useState<LeagueSagaImportBundle | null>(null);
   const [busyAction, setBusyAction] = useState<BusyAction | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
@@ -86,20 +86,20 @@ export default function App() {
       setSettings((current) => withSeasonFallback({ ...current, ...parsed }));
       setNotice({
         tone: 'success',
-        title: 'Connected to LeagueLore',
+        title: 'Connected to LeagueSaga',
         message: 'Your league details and secure import session are ready. Confirm them below to continue.'
       });
     }
 
-    const unsubscribe = window.leagueLore.onDeepLink(applyDeepLink);
+    const unsubscribe = window.leagueSaga.onDeepLink(applyDeepLink);
 
-    void window.leagueLore
+    void window.leagueSaga
       .appVersion()
       .then((nextVersion) => {
         if (!disposed) setVersion(nextVersion);
       })
       .catch(reportInitializationError);
-    void window.leagueLore
+    void window.leagueSaga
       .runtimeConfig()
       .then((config) => {
         if (disposed) return;
@@ -110,7 +110,7 @@ export default function App() {
         }));
       })
       .catch(reportInitializationError);
-    void window.leagueLore
+    void window.leagueSaga
       .getSettings()
       .then((loaded) => {
         if (disposed) return;
@@ -118,19 +118,19 @@ export default function App() {
         setSettings(withSeasonFallback(deepLinkSettings ? { ...loaded, ...deepLinkSettings } : loaded));
       })
       .catch(reportInitializationError);
-    void window.leagueLore
+    void window.leagueSaga
       .getEspnSessionStatus()
       .then((status) => {
         if (!disposed) setSessionStatus(status);
       })
       .catch(reportInitializationError);
-    void window.leagueLore
+    void window.leagueSaga
       .rendererReady()
       .then((pendingDeepLink) => {
         if (pendingDeepLink) applyDeepLink(pendingDeepLink);
       })
       .catch(reportInitializationError);
-    void window.leagueLore
+    void window.leagueSaga
       .checkForUpdates()
       .then((nextUpdate) => {
         if (!disposed) setUpdateInfo(nextUpdate);
@@ -148,7 +148,7 @@ export default function App() {
     let disposed = false;
     const poll = async () => {
       try {
-        const status = await window.leagueLore.getEspnSessionStatus();
+        const status = await window.leagueSaga.getEspnSessionStatus();
         if (disposed) return;
         setSessionStatus(status);
         if (status.isSignedIn) {
@@ -187,7 +187,7 @@ export default function App() {
   const stepIndex = STEPS.indexOf(step);
 
   async function refreshStatus() {
-    const status = await window.leagueLore.getEspnSessionStatus();
+    const status = await window.leagueSaga.getEspnSessionStatus();
     setSessionStatus(status);
     return status;
   }
@@ -218,7 +218,7 @@ export default function App() {
   }
 
   async function persistSettings(next = settings) {
-    const saved = await window.leagueLore.saveSettings(next);
+    const saved = await window.leagueSaga.saveSettings(next);
     setSettings(saved);
     return saved;
   }
@@ -228,7 +228,7 @@ export default function App() {
     setNotice(null);
     try {
       const saved = await persistSettings();
-      await window.leagueLore.openEspnLogin({ leagueId: saved.leagueId, season: saved.season });
+      await window.leagueSaga.openEspnLogin({ leagueId: saved.leagueId, season: saved.season });
       setStep('signin');
       setNotice({
         tone: 'info',
@@ -248,7 +248,7 @@ export default function App() {
     setUploadResult(null);
     try {
       const saved = await persistSettings();
-      const result = await window.leagueLore.importFromEspn({
+      const result = await window.leagueSaga.importFromEspn({
         leagueId: saved.leagueId,
         season: saved.season,
         importSessionId: saved.importSessionId
@@ -278,7 +278,7 @@ export default function App() {
     setUploadResult(null);
     try {
       const saved = await persistSettings();
-      const result = await window.leagueLore.createMockImport({
+      const result = await window.leagueSaga.createMockImport({
         leagueId: saved.leagueId || 'mock-league',
         season: saved.season ?? currentSeasonYear(),
         importSessionId: saved.importSessionId
@@ -303,7 +303,7 @@ export default function App() {
     setBusyAction('saving');
     setNotice(null);
     try {
-      const result = await window.leagueLore.saveBundleToDisk(deliveryBundle);
+      const result = await window.leagueSaga.saveBundleToDisk(deliveryBundle);
       if (!result.canceled) {
         setNotice({
           tone: 'success',
@@ -323,8 +323,8 @@ export default function App() {
     if (!canUpload) {
       setNotice({
         tone: 'info',
-        title: 'Open this helper from LeagueLore to send data',
-        message: 'This manual session can save JSON locally, but it does not include a secure LeagueLore upload token.'
+        title: 'Open this helper from LeagueSaga to send data',
+        message: 'This manual session can save JSON locally, but it does not include a secure LeagueSaga upload token.'
       });
       return;
     }
@@ -332,7 +332,7 @@ export default function App() {
     setNotice(null);
     try {
       const saved = await persistSettings();
-      const result = await window.leagueLore.uploadBundle({
+      const result = await window.leagueSaga.uploadBundle({
         apiBaseUrl: saved.apiBaseUrl,
         importToken: saved.importToken,
         bundle: deliveryBundle
@@ -355,16 +355,16 @@ export default function App() {
 
   async function cancelBusyAction() {
     try {
-      if (busyAction === 'importing') await window.leagueLore.cancelEspnImport();
-      if (busyAction === 'uploading') await window.leagueLore.cancelUpload();
+      if (busyAction === 'importing') await window.leagueSaga.cancelEspnImport();
+      if (busyAction === 'uploading') await window.leagueSaga.cancelUpload();
     } catch (error) {
       showError(error);
     }
   }
 
-  async function continueInLeagueLore() {
+  async function continueInLeagueSaga() {
     try {
-      if (uploadResult?.continuationUrl) await window.leagueLore.openLeagueLoreUrl(uploadResult.continuationUrl);
+      if (uploadResult?.continuationUrl) await window.leagueSaga.openLeagueSagaUrl(uploadResult.continuationUrl);
     } catch (error) {
       showError(error);
     }
@@ -373,10 +373,10 @@ export default function App() {
   async function handleUpdateAction() {
     try {
       if (updateInfo?.status === 'available' && updateInfo.releaseUrl) {
-        await window.leagueLore.openUpdateUrl(updateInfo.releaseUrl);
+        await window.leagueSaga.openUpdateUrl(updateInfo.releaseUrl);
         return;
       }
-      const next = await window.leagueLore.checkForUpdates();
+      const next = await window.leagueSaga.checkForUpdates();
       setUpdateInfo(next);
       setNotice(
         next.status === 'available'
@@ -404,7 +404,7 @@ export default function App() {
 
   async function saveDiagnostics() {
     try {
-      const result = await window.leagueLore.saveDiagnostics();
+      const result = await window.leagueSaga.saveDiagnostics();
       if (!result.canceled) {
         setNotice({
           tone: 'success',
@@ -420,7 +420,7 @@ export default function App() {
 
   async function openProjectDocument(url: string) {
     try {
-      await window.leagueLore.openProjectUrl(url);
+      await window.leagueSaga.openProjectUrl(url);
     } catch (error) {
       showError(error);
     }
@@ -430,7 +430,7 @@ export default function App() {
     setBusyAction('clearing-session');
     setNotice(null);
     try {
-      await window.leagueLore.clearEspnSession();
+      await window.leagueSaga.clearEspnSession();
       await refreshStatus();
       setNotice({
         tone: 'success',
@@ -460,9 +460,9 @@ export default function App() {
     <main className="shell">
       <header className="app-header">
         <div className="brand-lockup">
-          <img className="brand-logo" src={leagueLoreLogoUrl} alt="" />
+          <img className="brand-logo" src={leagueSagaLogoUrl} alt="" />
           <div>
-            <p className="eyebrow">LeagueLore</p>
+            <p className="eyebrow">LeagueSaga</p>
             <h1>ESPN Import Helper</h1>
           </div>
         </div>
@@ -484,7 +484,7 @@ export default function App() {
 
       <section className="intro">
         <div>
-          <h2>Bring your ESPN league into LeagueLore.</h2>
+          <h2>Bring your ESPN league into LeagueSaga.</h2>
           <p>Sign in directly with ESPN, review the normalized data, then choose exactly what leaves your computer.</p>
         </div>
         <div className="privacy-points" aria-label="Privacy protections">
@@ -531,14 +531,14 @@ export default function App() {
               state={step === 'upload' ? 'active' : bundle ? 'available' : 'locked'}
               number="4"
               title="Finish"
-              body="Save or send to LeagueLore"
+              body="Save or send to LeagueSaga"
               onClick={() => goToStep('upload')}
             />
           </nav>
           <div className="privacy-note">
             <Icon name="shield" />
             <div>
-              <strong>Your ESPN password never enters LeagueLore.</strong>
+              <strong>Your ESPN password never enters LeagueSaga.</strong>
               <span>Authentication happens only in this helper.</span>
             </div>
           </div>
@@ -599,7 +599,7 @@ export default function App() {
               onSave={saveBundle}
               onUpload={upload}
               onCancel={cancelBusyAction}
-              onContinue={continueInLeagueLore}
+              onContinue={continueInLeagueSaga}
             />
           )}
         </div>
@@ -610,7 +610,7 @@ export default function App() {
           <button
             onClick={() =>
               void openProjectDocument(
-                'https://github.com/dcuellar322/leaguelore-import-helper/blob/master/docs/PRIVACY.md'
+                'https://github.com/dcuellar322/league-saga-import-helper/blob/master/docs/PRIVACY.md'
               )
             }
           >
@@ -619,7 +619,7 @@ export default function App() {
           <button
             onClick={() =>
               void openProjectDocument(
-                'https://github.com/dcuellar322/leaguelore-import-helper/blob/master/docs/SECURITY.md'
+                'https://github.com/dcuellar322/league-saga-import-helper/blob/master/docs/SECURITY.md'
               )
             }
           >

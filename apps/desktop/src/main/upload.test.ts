@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createMockImportBundle } from '@leaguelore/import-contract';
+import { createMockImportBundle } from '@leaguesaga/import-contract';
 
 vi.mock('electron', () => ({ app: { isPackaged: false } }));
 
 import { MAX_IMPORT_BUNDLE_BYTES, uploadBundle } from './upload.js';
 
-describe('LeagueLore uploads', () => {
+describe('LeagueSaga uploads', () => {
   beforeEach(() => vi.restoreAllMocks());
 
   it('accepts a trusted continuation URL from a successful preview', async () => {
@@ -59,7 +59,7 @@ describe('LeagueLore uploads', () => {
       ok: false,
       code: 'offline',
       retryable: true,
-      message: 'Unable to reach LeagueLore. Check your connection and retry.'
+      message: 'Unable to reach LeagueSaga. Check your connection and retry.'
     });
   });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { currentEspnSeasonYear, currentSeasonYear, defaultLeagueLoreApiBaseUrl } from './environment.js';
+import { currentEspnSeasonYear, currentSeasonYear, defaultLeagueSagaApiBaseUrl } from './environment.js';
 
 describe('ESPN season defaults', () => {
   it('uses the prior season before June and the current year from June onward', () => {
@@ -8,8 +8,8 @@ describe('ESPN season defaults', () => {
   });
 
   it('selects packaged and development API defaults', () => {
-    expect(defaultLeagueLoreApiBaseUrl(true)).toBe('https://portal.leagueloreapp.com');
-    expect(defaultLeagueLoreApiBaseUrl(false)).toBe('http://localhost:15173');
+    expect(defaultLeagueSagaApiBaseUrl(true)).toBe('https://portal.leaguesaga.com');
+    expect(defaultLeagueSagaApiBaseUrl(false)).toBe('http://localhost:15173');
     expect(currentSeasonYear()).toBe(currentEspnSeasonYear());
   });
 });

@@ -36,9 +36,9 @@ describe('ESPN payload transform', () => {
         teams: [
           {
             id: 1,
-            abbrev: 'LL',
-            location: 'League',
-            nickname: 'Lore',
+            abbrev: 'SK',
+            location: 'Saga',
+            nickname: 'Keepers',
             owners: ['Commissioner'],
             logo: 'https://cdn.example.com/logo.png',
             playoffSeed: 0,
@@ -120,7 +120,7 @@ describe('ESPN payload transform', () => {
     expect(bundle.league.settings.nested).toEqual({ harmless: true });
     expect(bundle.teams[0]).toMatchObject({
       externalRef: { provider: 'espn', externalId: '1', rawKind: 'team' },
-      displayName: 'League Lore',
+      displayName: 'Saga Keepers',
       ownerDisplayNames: ['Demo Commissioner'],
       finalStanding: 1
     });

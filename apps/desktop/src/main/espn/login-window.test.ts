@@ -60,7 +60,7 @@ describe('ESPN login window', () => {
     const window = electron.BrowserWindow.instances[0];
     expect(window?.options).toMatchObject({
       webPreferences: {
-        partition: 'leaguelore-espn-import',
+        partition: 'leaguesaga-espn-import',
         nodeIntegration: false,
         contextIsolation: true,
         sandbox: true,
