@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { LeagueSagaImportBundle } from '@leaguesaga/import-contract';
+import type { LeagueSagaHistoryImport } from '@leaguesaga/import-contract';
 import type {
   DeepLinkSettings,
   HelperSettings,
+  ImportSourceProvider,
   RuntimeConfig,
   SessionStatus,
   UpdateInfo,
@@ -10,23 +11,28 @@ import type {
 } from '../shared/ipc';
 import { currentSeasonYear, defaultLeagueSagaApiBaseUrl } from '../shared/environment';
 import leagueSagaLogoUrl from '../../assets/league-saga-mark.png';
-import { createDeliveryBundle, DEFAULT_INCLUDED_CATEGORIES, type IncludedCategories } from './import-review';
+import leagueSagaWordmarkUrl from '../../assets/league-saga-wordmark-reverse.svg';
+import { createDeliveryHistory, DEFAULT_INCLUDED_CATEGORIES, type IncludedCategories } from './import-review';
 import { formatError } from './errors';
 import {
+  ConnectStep,
   Icon,
+  LeagueDetailsStep,
   NoticeBanner,
   PreviewStep,
-  SetupStep,
-  SignInStep,
+  ProviderStep,
+  SettingsModal,
   StepButton,
   UploadStep,
+  providerName,
   type BusyAction,
-  type Notice
+  type Notice,
+  type UpdateBusy
 } from './components';
 
-type Step = 'setup' | 'signin' | 'preview' | 'upload';
+type Step = 'provider' | 'details' | 'connect' | 'preview' | 'upload';
 
-const STEPS: Step[] = ['setup', 'signin', 'preview', 'upload'];
+const STEPS: Step[] = ['provider', 'details', 'connect', 'preview', 'upload'];
 
 const DEFAULT_STATUS: SessionStatus = {
   isSignedIn: false,
@@ -40,8 +46,9 @@ const DEFAULT_STATUS: SessionStatus = {
 const DEFAULT_SETTINGS: HelperSettings = {
   apiBaseUrl: defaultLeagueSagaApiBaseUrl(true),
   importToken: '',
+  provider: 'espn',
   leagueId: '',
-  season: currentSeasonYear()
+  season: undefined
 };
 
 const DEFAULT_RUNTIME_CONFIG: RuntimeConfig = {
@@ -53,23 +60,22 @@ const DEFAULT_RUNTIME_CONFIG: RuntimeConfig = {
 export default function App() {
   const [version, setVersion] = useState('');
   const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfig>(DEFAULT_RUNTIME_CONFIG);
-  const [step, setStep] = useState<Step>('setup');
+  const [step, setStep] = useState<Step>('provider');
   const [settings, setSettings] = useState<HelperSettings>(DEFAULT_SETTINGS);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>(DEFAULT_STATUS);
-  const [bundle, setBundle] = useState<LeagueSagaImportBundle | null>(null);
+  const [history, setHistory] = useState<LeagueSagaHistoryImport | null>(null);
   const [busyAction, setBusyAction] = useState<BusyAction | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [includedCategories, setIncludedCategories] = useState<IncludedCategories>(DEFAULT_INCLUDED_CATEGORIES);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [updateBusy, setUpdateBusy] = useState<UpdateBusy>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const deepLinkSettingsRef = useRef<DeepLinkSettings | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let disposed = false;
-
-    function withSeasonFallback(next: HelperSettings): HelperSettings {
-      return { ...next, season: next.season ?? currentSeasonYear() };
-    }
 
     function reportInitializationError(error: unknown) {
       if (disposed) return;
@@ -82,8 +88,11 @@ export default function App() {
 
     function applyDeepLink(parsed: DeepLinkSettings) {
       if (disposed) return;
-      deepLinkSettingsRef.current = { ...(deepLinkSettingsRef.current ?? {}), ...parsed };
-      setSettings((current) => withSeasonFallback({ ...current, ...parsed }));
+      const providerAwareSettings =
+        parsed.leagueId && !parsed.provider ? { ...parsed, provider: 'espn' as const } : parsed;
+      deepLinkSettingsRef.current = { ...(deepLinkSettingsRef.current ?? {}), ...providerAwareSettings };
+      setSettings((current) => ({ ...current, ...providerAwareSettings }));
+      setStep(parsed.leagueId ? 'details' : 'provider');
       setNotice({
         tone: 'success',
         title: 'Connected to LeagueSaga',
@@ -115,7 +124,7 @@ export default function App() {
       .then((loaded) => {
         if (disposed) return;
         const deepLinkSettings = deepLinkSettingsRef.current;
-        setSettings(withSeasonFallback(deepLinkSettings ? { ...loaded, ...deepLinkSettings } : loaded));
+        setSettings(deepLinkSettings ? { ...loaded, ...deepLinkSettings } : loaded);
       })
       .catch(reportInitializationError);
     void window.leagueSaga
@@ -144,7 +153,26 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (step !== 'signin' || sessionStatus.isSignedIn || busyAction === 'clearing-session') return;
+    if (!settingsOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSettingsOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [settingsOpen]);
+
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [step]);
+
+  useEffect(() => {
+    if (
+      step !== 'connect' ||
+      settings.provider !== 'espn' ||
+      sessionStatus.isSignedIn ||
+      busyAction === 'clearing-session'
+    )
+      return;
     let disposed = false;
     const poll = async () => {
       try {
@@ -167,22 +195,24 @@ export default function App() {
       disposed = true;
       window.clearInterval(interval);
     };
-  }, [step, sessionStatus.isSignedIn, busyAction]);
+  }, [step, settings.provider, sessionStatus.isSignedIn, busyAction]);
 
   const seasonIsValid = useMemo(
     () =>
-      settings.season !== undefined &&
-      Number.isInteger(settings.season) &&
-      settings.season >= 2000 &&
-      settings.season <= 2100,
+      settings.season === undefined ||
+      (Number.isInteger(settings.season) && settings.season >= 2000 && settings.season <= currentSeasonYear()),
     [settings.season]
   );
-  const leagueIdIsValid = /^\d{1,12}$/.test(settings.leagueId.trim());
-  const canImport = leagueIdIsValid && seasonIsValid;
+  const leagueIdIsValid =
+    settings.provider === 'espn'
+      ? /^\d{1,12}$/.test(settings.leagueId.trim())
+      : settings.leagueId.trim().length > 0 && settings.leagueId.trim().length <= 64;
+  const detailsAreValid = leagueIdIsValid && seasonIsValid;
+  const canImport = settings.provider === 'espn' && detailsAreValid;
   const canUpload = Boolean(settings.importToken.trim());
-  const deliveryBundle = useMemo(
-    () => (bundle ? createDeliveryBundle(bundle, includedCategories) : null),
-    [bundle, includedCategories]
+  const deliveryHistory = useMemo(
+    () => (history ? createDeliveryHistory(history, includedCategories) : null),
+    [history, includedCategories]
   );
   const stepIndex = STEPS.indexOf(step);
 
@@ -229,7 +259,7 @@ export default function App() {
     try {
       const saved = await persistSettings();
       await window.leagueSaga.openEspnLogin({ leagueId: saved.leagueId, season: saved.season });
-      setStep('signin');
+      setStep('connect');
       setNotice({
         tone: 'info',
         title: 'ESPN opened in a separate window',
@@ -253,7 +283,7 @@ export default function App() {
         season: saved.season,
         importSessionId: saved.importSessionId
       });
-      setBundle(result.bundle);
+      setHistory(result.history);
       setIncludedCategories(DEFAULT_INCLUDED_CATEGORIES);
       setStep('preview');
       setNotice(
@@ -261,8 +291,8 @@ export default function App() {
           ? { tone: 'info', title: 'Import ready with notes', message: result.warnings.join(' ') }
           : {
               tone: 'success',
-              title: 'Import ready to review',
-              message: 'Your ESPN data was normalized and validated locally.'
+              title: 'League history ready to review',
+              message: `${result.history.seasons.length} season${result.history.seasons.length === 1 ? '' : 's'} were normalized and validated locally.`
             }
       );
     } catch (error) {
@@ -280,10 +310,10 @@ export default function App() {
       const saved = await persistSettings();
       const result = await window.leagueSaga.createMockImport({
         leagueId: saved.leagueId || 'mock-league',
-        season: saved.season ?? currentSeasonYear(),
+        season: saved.season,
         importSessionId: saved.importSessionId
       });
-      setBundle(result.bundle);
+      setHistory(result.history);
       setIncludedCategories(DEFAULT_INCLUDED_CATEGORIES);
       setStep('preview');
       setNotice({
@@ -299,16 +329,16 @@ export default function App() {
   }
 
   async function saveBundle() {
-    if (!deliveryBundle) return;
+    if (!deliveryHistory) return;
     setBusyAction('saving');
     setNotice(null);
     try {
-      const result = await window.leagueSaga.saveBundleToDisk(deliveryBundle);
+      const result = await window.leagueSaga.saveBundleToDisk(deliveryHistory);
       if (!result.canceled) {
         setNotice({
           tone: 'success',
           title: 'JSON saved locally',
-          message: result.filePath ?? 'Your import bundle was saved.'
+          message: result.filePath ?? 'Your historical import package was saved.'
         });
       }
     } catch (error) {
@@ -319,7 +349,7 @@ export default function App() {
   }
 
   async function upload() {
-    if (!deliveryBundle) return;
+    if (!deliveryHistory) return;
     if (!canUpload) {
       setNotice({
         tone: 'info',
@@ -335,7 +365,7 @@ export default function App() {
       const result = await window.leagueSaga.uploadBundle({
         apiBaseUrl: saved.apiBaseUrl,
         importToken: saved.importToken,
-        bundle: deliveryBundle
+        bundle: deliveryHistory
       });
       setUploadResult(result);
       setStep('upload');
@@ -370,33 +400,32 @@ export default function App() {
     }
   }
 
-  async function handleUpdateAction() {
+  async function checkForUpdates() {
+    setUpdateBusy('checking');
     try {
-      if (updateInfo?.status === 'available' && updateInfo.releaseUrl) {
-        await window.leagueSaga.openUpdateUrl(updateInfo.releaseUrl);
-        return;
-      }
       const next = await window.leagueSaga.checkForUpdates();
       setUpdateInfo(next);
-      setNotice(
-        next.status === 'available'
-          ? {
-              tone: 'info',
-              title: `Version ${next.latestVersion} is available`,
-              message: 'Choose “Update available” in the header to open the signed release.'
-            }
-          : next.status === 'current'
-            ? {
-                tone: 'success',
-                title: 'Helper is up to date',
-                message: `Version ${next.currentVersion} is the latest available release.`
-              }
-            : {
-                tone: 'info',
-                title: 'Update check unavailable',
-                message: 'The helper could not reach the release service. Try again later.'
-              }
-      );
+    } catch (error) {
+      showError(error);
+    } finally {
+      setUpdateBusy(null);
+    }
+  }
+
+  async function downloadAndInstallUpdate() {
+    setUpdateBusy('downloading');
+    try {
+      await window.leagueSaga.downloadUpdate();
+      await window.leagueSaga.installUpdate();
+    } catch (error) {
+      showError(error);
+      setUpdateBusy(null);
+    }
+  }
+
+  async function openReleaseNotes() {
+    try {
+      if (updateInfo?.releaseUrl) await window.leagueSaga.openUpdateUrl(updateInfo.releaseUrl);
     } catch (error) {
       showError(error);
     }
@@ -449,11 +478,26 @@ export default function App() {
   }
 
   function goToStep(nextStep: Step) {
-    const nextIndex = STEPS.indexOf(nextStep);
-    if (nextIndex <= 1 || bundle) {
+    const canOpen =
+      nextStep === 'provider' ||
+      nextStep === 'details' ||
+      (nextStep === 'connect' && detailsAreValid) ||
+      ((nextStep === 'preview' || nextStep === 'upload') && Boolean(history));
+    if (canOpen) {
       setStep(nextStep);
       setNotice(null);
     }
+  }
+
+  function chooseProvider(provider: ImportSourceProvider) {
+    setSettings((current) =>
+      current.provider === provider ? current : { ...current, provider, leagueId: '', season: undefined }
+    );
+    setSessionStatus(DEFAULT_STATUS);
+    setHistory(null);
+    setUploadResult(null);
+    setStep('details');
+    setNotice(null);
   }
 
   return (
@@ -461,35 +505,24 @@ export default function App() {
       <header className="app-header">
         <div className="brand-lockup">
           <img className="brand-logo" src={leagueSagaLogoUrl} alt="" />
-          <div>
-            <p className="eyebrow">LeagueSaga</p>
-            <h1>ESPN Import Helper</h1>
-          </div>
+          <img className="brand-wordmark" src={leagueSagaWordmarkUrl} alt="LeagueSaga" />
+          <span className="brand-divider" aria-hidden="true" />
+          <h1>Import Helper</h1>
         </div>
-        <div className="header-tools">
-          <button className="header-action" onClick={saveDiagnostics}>
-            Save diagnostics
-          </button>
-          <button
-            className={`secure-badge ${updateInfo?.status === 'available' ? 'update' : ''}`}
-            onClick={handleUpdateAction}
-          >
-            <Icon name="shield" />{' '}
-            {updateInfo?.status === 'available'
-              ? `Update ${updateInfo.latestVersion} available`
-              : `Secure local helper ${version ? `· v${version}` : ''}`}
-          </button>
-        </div>
+        <button className="settings-button" onClick={() => setSettingsOpen(true)} aria-label="Open settings">
+          <Icon name="gear" /> <span>Settings</span>
+          {updateInfo?.status === 'available' && <span className="update-dot" aria-label="Update available" />}
+        </button>
       </header>
 
       <section className="intro">
         <div>
-          <h2>Bring your ESPN league into LeagueSaga.</h2>
-          <p>Sign in directly with ESPN, review the normalized data, then choose exactly what leaves your computer.</p>
+          <h2>Bring your league into LeagueSaga.</h2>
+          <p>Sign in directly to your league, review your league data, then choose what leaves your computer.</p>
         </div>
         <div className="privacy-points" aria-label="Privacy protections">
           <span>
-            <Icon name="lock" /> Cookies stay local
+            <Icon name="lock" /> Credentials stay local
           </span>
           <span>
             <Icon name="check" /> Review before sending
@@ -507,29 +540,38 @@ export default function App() {
           </div>
           <nav>
             <StepButton
-              state={step === 'setup' ? 'active' : stepIndex > 0 ? 'complete' : 'available'}
+              state={step === 'provider' ? 'active' : stepIndex > 0 ? 'complete' : 'available'}
               number="1"
-              title="League details"
-              body="Choose league and season"
-              onClick={() => goToStep('setup')}
+              title="Choose provider"
+              body="ESPN, Yahoo, or Sleeper"
+              onClick={() => goToStep('provider')}
             />
             <StepButton
-              state={step === 'signin' ? 'active' : stepIndex > 1 ? 'complete' : canImport ? 'available' : 'locked'}
+              state={step === 'details' ? 'active' : stepIndex > 1 ? 'complete' : 'available'}
               number="2"
-              title="Connect ESPN"
-              body="Sign in securely"
-              onClick={() => goToStep('signin')}
+              title="League details"
+              body="League and optional start year"
+              onClick={() => goToStep('details')}
             />
             <StepButton
-              state={step === 'preview' ? 'active' : stepIndex > 2 ? 'complete' : bundle ? 'available' : 'locked'}
+              state={
+                step === 'connect' ? 'active' : stepIndex > 2 ? 'complete' : detailsAreValid ? 'available' : 'locked'
+              }
               number="3"
+              title={`Connect ${providerName(settings.provider)}`}
+              body="Connect securely"
+              onClick={() => goToStep('connect')}
+            />
+            <StepButton
+              state={step === 'preview' ? 'active' : stepIndex > 3 ? 'complete' : history ? 'available' : 'locked'}
+              number="4"
               title="Review data"
-              body="Inspect the local bundle"
+              body="Inspect every season"
               onClick={() => goToStep('preview')}
             />
             <StepButton
-              state={step === 'upload' ? 'active' : bundle ? 'available' : 'locked'}
-              number="4"
+              state={step === 'upload' ? 'active' : history ? 'available' : 'locked'}
+              number="5"
               title="Finish"
               body="Save or send to LeagueSaga"
               onClick={() => goToStep('upload')}
@@ -538,30 +580,31 @@ export default function App() {
           <div className="privacy-note">
             <Icon name="shield" />
             <div>
-              <strong>Your ESPN password never enters LeagueSaga.</strong>
+              <strong>Your provider password never enters LeagueSaga.</strong>
               <span>Authentication happens only in this helper.</span>
             </div>
           </div>
         </aside>
 
-        <div className="content">
+        <div className="content" ref={contentRef}>
           {notice && <NoticeBanner notice={notice} onDismiss={() => setNotice(null)} />}
-          {step === 'setup' && (
-            <SetupStep
+          {step === 'provider' && <ProviderStep selectedProvider={settings.provider} onSelect={chooseProvider} />}
+          {step === 'details' && (
+            <LeagueDetailsStep
               settings={settings}
               setSettings={setSettings}
               busyAction={busyAction}
-              canContinue={canImport}
+              canContinue={detailsAreValid}
               leagueIdIsValid={leagueIdIsValid}
               seasonIsValid={seasonIsValid}
               hasImportSession={canUpload}
               mockImportsEnabled={runtimeConfig.mockImportsEnabled}
-              onContinue={() => goToStep('signin')}
+              onContinue={() => goToStep('connect')}
               onMock={importMock}
             />
           )}
-          {step === 'signin' && (
-            <SignInStep
+          {step === 'connect' && (
+            <ConnectStep
               settings={settings}
               status={sessionStatus}
               busyAction={busyAction}
@@ -577,8 +620,8 @@ export default function App() {
           )}
           {step === 'preview' && (
             <PreviewStep
-              sourceBundle={bundle}
-              bundle={deliveryBundle}
+              sourceHistory={history}
+              history={deliveryHistory}
               includedCategories={includedCategories}
               setIncludedCategories={setIncludedCategories}
               busyAction={busyAction}
@@ -591,7 +634,7 @@ export default function App() {
           )}
           {step === 'upload' && (
             <UploadStep
-              bundle={deliveryBundle}
+              history={deliveryHistory}
               result={uploadResult}
               busyAction={busyAction}
               canUpload={canUpload}
@@ -605,7 +648,7 @@ export default function App() {
         </div>
       </section>
       <footer className="app-footer">
-        <span>Open source · ESPN credentials stay in the helper session</span>
+        <span>Open source · Provider credentials stay in the helper session</span>
         <div>
           <button
             onClick={() =>
@@ -627,6 +670,18 @@ export default function App() {
           </button>
         </div>
       </footer>
+      {settingsOpen && (
+        <SettingsModal
+          version={version}
+          updateInfo={updateInfo}
+          updateBusy={updateBusy}
+          onClose={() => setSettingsOpen(false)}
+          onCheckForUpdates={() => void checkForUpdates()}
+          onDownloadAndInstall={() => void downloadAndInstallUpdate()}
+          onOpenRelease={() => void openReleaseNotes()}
+          onSaveDiagnostics={() => void saveDiagnostics()}
+        />
+      )}
     </main>
   );
 }

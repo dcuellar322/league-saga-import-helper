@@ -8,6 +8,7 @@ import { defaultLeagueSagaApiBaseUrl } from '../shared/environment.js';
 
 const PersistedSettingsSchema = z.object({
   apiBaseUrl: z.string().optional(),
+  provider: z.enum(['espn', 'yahoo', 'sleeper']).default('espn'),
   leagueId: z.string(),
   season: z.number().optional()
 });
@@ -17,6 +18,7 @@ function defaultSettings(): HelperSettings {
     apiBaseUrl: process.env.LEAGUESAGA_API_BASE ?? defaultLeagueSagaApiBaseUrl(app.isPackaged),
     importToken: process.env.LEAGUESAGA_IMPORT_TOKEN ?? '',
     importSessionId: undefined,
+    provider: 'espn',
     leagueId: ''
   };
 }

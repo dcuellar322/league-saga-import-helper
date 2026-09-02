@@ -9,7 +9,7 @@ The LeagueSaga Import Helper is intentionally designed to avoid the most concern
 - Reads only the cookies created inside the helper's own ESPN session.
 - Uses those cookies locally to request ESPN fantasy data.
 - Converts ESPN responses to the shared LeagueSaga import contract.
-- Uploads only the normalized import bundle to LeagueSaga.
+- Uploads only the normalized, reviewed historical import package to LeagueSaga.
 
 ## What the helper does not do
 
@@ -54,7 +54,10 @@ The optional diagnostics export contains timestamps, event names, result codes, 
 
 ## Data uploaded to LeagueSaga
 
-The app uploads a `LeagueSagaImportBundle` JSON document. It includes league, team, roster, matchup, draft, and transaction data. It should never include ESPN session cookies or passwords.
+The app uploads a versioned `LeagueSagaHistoryImport` JSON document. It contains normalized league,
+settings, team, roster, matchup, draft, and transaction data. It does not contain raw provider
+response objects, arbitrary provider settings, ESPN session cookies, or passwords. See
+[History Import Format](IMPORT_FORMAT.md) for the complete public boundary.
 
 ## Recommended release posture
 

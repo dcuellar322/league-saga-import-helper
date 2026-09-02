@@ -1,33 +1,28 @@
 import { IMPORT_CONTRACT_VERSION } from './version.js';
-import type { LeagueSagaImportBundle } from './schema.js';
+import type { LeagueSagaHistoryImport, LeagueSagaHistorySeason } from './schema.js';
 
-export function createMockImportBundle(overrides: Partial<LeagueSagaImportBundle> = {}): LeagueSagaImportBundle {
-  const now = new Date().toISOString();
-  const leagueExternalId = 'mock-league-2026';
-  const bundle: LeagueSagaImportBundle = {
-    metadata: {
-      contractVersion: IMPORT_CONTRACT_VERSION,
-      source: 'mock',
-      generatedAt: now,
-      helper: {
-        name: 'LeagueSaga Import Helper',
-        version: '0.1.0',
-        platform: 'mock'
-      },
-      warnings: ['Mock import bundle for local development.']
-    },
+export function createMockHistorySeason(
+  season = 2026,
+  overrides: Partial<LeagueSagaHistorySeason> = {}
+): LeagueSagaHistorySeason {
+  const historySeason: LeagueSagaHistorySeason = {
+    season,
     league: {
-      externalRef: { provider: 'mock', externalId: leagueExternalId },
       name: 'LeagueSaga Demo League',
-      season: 2026,
       size: 2,
       visibility: 'private',
-      settings: { scoring: 'PPR' }
+      settings: {
+        scoring: {
+          mode: 'H2H_POINTS',
+          format: 'ppr',
+          pointsPerReception: 1,
+          rules: [{ sourceId: '53', name: 'Receptions', abbreviation: 'REC', points: 1 }]
+        }
+      }
     },
     teams: [
       {
-        externalRef: { provider: 'mock', externalId: '1' },
-        leagueExternalId,
+        externalId: '1',
         abbreviation: 'SK',
         location: 'League',
         nickname: 'Keepers',
@@ -35,8 +30,7 @@ export function createMockImportBundle(overrides: Partial<LeagueSagaImportBundle
         ownerDisplayNames: ['Demo Commissioner']
       },
       {
-        externalRef: { provider: 'mock', externalId: '2' },
-        leagueExternalId,
+        externalId: '2',
         abbreviation: 'TD',
         location: 'Touchdown',
         nickname: 'Archivists',
@@ -49,7 +43,7 @@ export function createMockImportBundle(overrides: Partial<LeagueSagaImportBundle
         teamExternalId: '1',
         lineupSlot: 'QB',
         player: {
-          externalRef: { provider: 'mock', externalId: '1001' },
+          externalId: '1001',
           fullName: 'Demo Quarterback',
           positions: ['QB'],
           proTeam: 'FA'
@@ -58,9 +52,7 @@ export function createMockImportBundle(overrides: Partial<LeagueSagaImportBundle
     ],
     matchups: [
       {
-        externalRef: { provider: 'mock', externalId: 'mock-week-1' },
-        leagueExternalId,
-        season: 2026,
+        externalId: `${season}-mock-week-1`,
         scoringPeriodId: 1,
         home: { teamExternalId: '1', score: 124.4, winner: true },
         away: { teamExternalId: '2', score: 118.2, winner: false },
@@ -68,8 +60,41 @@ export function createMockImportBundle(overrides: Partial<LeagueSagaImportBundle
       }
     ],
     draftPicks: [],
-    transactions: []
+    transactions: [],
+    warnings: ['Mock history season for local development.']
   };
 
-  return { ...bundle, ...overrides };
+  return { ...historySeason, ...overrides };
+}
+
+export function createMockHistoryImport(
+  seasonYears = [2024, 2025, 2026],
+  options: {
+    leagueExternalId?: string;
+    importSessionId?: string;
+    helperVersion?: string;
+    platform?: string;
+  } = {}
+): LeagueSagaHistoryImport {
+  const leagueExternalId = options.leagueExternalId ?? 'mock-league-history';
+  const seasons = seasonYears.map((season) => createMockHistorySeason(season));
+
+  return {
+    kind: 'league-history',
+    contractVersion: IMPORT_CONTRACT_VERSION,
+    provider: 'mock',
+    generatedAt: new Date().toISOString(),
+    helper: {
+      name: 'LeagueSaga Import Helper',
+      version: options.helperVersion ?? '0.2.0',
+      platform: options.platform ?? 'mock'
+    },
+    importSessionId: options.importSessionId,
+    leagueExternalId,
+    leagueName: 'LeagueSaga Demo League',
+    startSeason: seasonYears[0]!,
+    endSeason: seasonYears.at(-1)!,
+    seasons,
+    warnings: ['Mock historical import for local development.']
+  };
 }

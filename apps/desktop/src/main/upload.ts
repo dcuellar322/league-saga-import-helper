@@ -1,22 +1,22 @@
 import { app } from 'electron';
-import { validateImportBundle } from '@leaguesaga/import-contract';
+import { validateImportPayload } from '@leaguesaga/import-contract';
 import type { UploadParams, UploadResult } from '../shared/ipc.js';
 import { createUploadParamsSchema, normalizeLeagueSagaNavigationUrl } from './validation.js';
 
-export const MAX_IMPORT_BUNDLE_BYTES = 8 * 1024 * 1024;
+export const MAX_IMPORT_PACKAGE_BYTES = 32 * 1024 * 1024;
 
 export async function uploadBundle(params: UploadParams, signal?: AbortSignal): Promise<UploadResult> {
   const parsedParams = createUploadParamsSchema({ allowLocalhost: !app.isPackaged }).parse(params);
-  const bundle = validateImportBundle(parsedParams.bundle);
+  const bundle = validateImportPayload(parsedParams.bundle);
   const baseUrl = parsedParams.apiBaseUrl.replace(/\/$/, '');
   const url = `${baseUrl}/api/import-helper/espn/preview`;
   const requestBody = JSON.stringify(bundle);
-  if (new TextEncoder().encode(requestBody).byteLength > MAX_IMPORT_BUNDLE_BYTES) {
+  if (new TextEncoder().encode(requestBody).byteLength > MAX_IMPORT_PACKAGE_BYTES) {
     return {
       ok: false,
       status: 413,
       code: 'rejected',
-      message: 'Import bundle exceeds the 8 MiB upload limit.',
+      message: `Import package exceeds the ${MAX_IMPORT_PACKAGE_BYTES / 1024 / 1024} MiB upload limit.`,
       retryable: false
     };
   }
@@ -30,7 +30,7 @@ export async function uploadBundle(params: UploadParams, signal?: AbortSignal): 
         'x-leaguesaga-import-token': parsedParams.importToken
       },
       body: requestBody,
-      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(30_000)]) : AbortSignal.timeout(30_000)
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(90_000)]) : AbortSignal.timeout(90_000)
     });
 
     const bodyText = (await response.text()).slice(0, 100_000);

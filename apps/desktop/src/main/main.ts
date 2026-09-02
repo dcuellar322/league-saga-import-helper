@@ -98,7 +98,7 @@ async function runPackagedSmokeTest(window: BrowserWindow): Promise<void> {
     }
     return {
       hasBridge: Boolean(window.leagueSaga),
-      hasHeading: document.body.textContent.includes('Confirm your league'),
+      hasHeading: document.body.textContent.includes('League details'),
       hasDeepLinkLeague: Array.from(document.querySelectorAll('input')).some((input) => input.value === '424242')
     };
   })()`)) as { hasBridge: boolean; hasHeading: boolean; hasDeepLinkLeague: boolean };

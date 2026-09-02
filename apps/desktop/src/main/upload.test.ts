@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createMockImportBundle } from '@leaguesaga/import-contract';
+import { createMockHistoryImport } from '@leaguesaga/import-contract';
 
 vi.mock('electron', () => ({ app: { isPackaged: false } }));
 
-import { MAX_IMPORT_BUNDLE_BYTES, uploadBundle } from './upload.js';
+import { MAX_IMPORT_PACKAGE_BYTES, uploadBundle } from './upload.js';
 
 describe('LeagueSaga uploads', () => {
   beforeEach(() => vi.restoreAllMocks());
@@ -20,7 +20,7 @@ describe('LeagueSaga uploads', () => {
     const result = await uploadBundle({
       apiBaseUrl: 'http://localhost:15173',
       importToken: 'one-time-token',
-      bundle: createMockImportBundle()
+      bundle: createMockHistoryImport()
     });
     expect(result).toMatchObject({
       ok: true,
@@ -28,6 +28,23 @@ describe('LeagueSaga uploads', () => {
       retryable: false,
       continuationUrl: 'http://localhost:15173/imports/preview/1'
     });
+  });
+
+  it('uploads a multi-season history package atomically', async () => {
+    const request = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    vi.stubGlobal('fetch', request);
+    const history = createMockHistoryImport();
+
+    const result = await uploadBundle({
+      apiBaseUrl: 'http://localhost:15173',
+      importToken: 'one-time-token',
+      bundle: history
+    });
+
+    expect(result.ok).toBe(true);
+    const body = JSON.parse(String(request.mock.calls[0]?.[1]?.body));
+    expect(body.kind).toBe('league-history');
+    expect(body.seasons).toHaveLength(3);
   });
 
   it('drops untrusted continuation URLs and classifies expired sessions', async () => {
@@ -42,7 +59,7 @@ describe('LeagueSaga uploads', () => {
     const result = await uploadBundle({
       apiBaseUrl: 'http://localhost:15173',
       importToken: 'expired-token',
-      bundle: createMockImportBundle()
+      bundle: createMockHistoryImport()
     });
     expect(result).toMatchObject({ ok: false, code: 'expired', retryable: false });
     expect(result.continuationUrl).toBeUndefined();
@@ -53,7 +70,7 @@ describe('LeagueSaga uploads', () => {
     const result = await uploadBundle({
       apiBaseUrl: 'http://localhost:15173',
       importToken: 'token',
-      bundle: createMockImportBundle()
+      bundle: createMockHistoryImport()
     });
     expect(result).toMatchObject({
       ok: false,
@@ -68,7 +85,7 @@ describe('LeagueSaga uploads', () => {
     controller.abort();
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('aborted')));
     const result = await uploadBundle(
-      { apiBaseUrl: 'http://localhost:15173', importToken: 'token', bundle: createMockImportBundle() },
+      { apiBaseUrl: 'http://localhost:15173', importToken: 'token', bundle: createMockHistoryImport() },
       controller.signal
     );
     expect(result).toMatchObject({ ok: false, code: 'canceled', retryable: false, message: 'Upload canceled.' });
@@ -79,7 +96,7 @@ describe('LeagueSaga uploads', () => {
     const result = await uploadBundle({
       apiBaseUrl: 'http://localhost:15173',
       importToken: 'token',
-      bundle: createMockImportBundle()
+      bundle: createMockHistoryImport()
     });
     expect(result).toMatchObject({ ok: true, code: 'ok' });
     expect(result.continuationUrl).toBeUndefined();
@@ -88,8 +105,8 @@ describe('LeagueSaga uploads', () => {
   it('rejects an oversized bundle before sending it', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
-    const bundle = createMockImportBundle();
-    bundle.metadata.warnings = ['x'.repeat(MAX_IMPORT_BUNDLE_BYTES)];
+    const bundle = createMockHistoryImport();
+    bundle.warnings = ['x'.repeat(MAX_IMPORT_PACKAGE_BYTES)];
 
     const result = await uploadBundle({
       apiBaseUrl: 'http://localhost:15173',

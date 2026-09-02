@@ -31,9 +31,6 @@ jobs:
   macos:
     needs: quality
     runs-on: macos-latest
-    strategy:
-      matrix:
-        arch: [x64, arm64]
     env:
       CSC_LINK: ${{ secrets.MACOS_CSC_LINK }}
       CSC_KEY_PASSWORD: ${{ secrets.MACOS_CSC_KEY_PASSWORD }}
@@ -54,7 +51,7 @@ jobs:
           printf '%s' "$APPLE_API_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
           chmod 600 "$RUNNER_TEMP/AuthKey.p8"
           echo "APPLE_API_KEY=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
-      - run: npm -w apps/desktop run make -- --mac --${{ matrix.arch }}
+      - run: npm -w apps/desktop run make -- --mac --x64 --arm64
       - name: Smoke test packaged app and deep link
         run: |
           executable=$(find apps/desktop/dist -type f -path '*/LeagueSaga Import Helper.app/Contents/MacOS/LeagueSaga Import' -print -quit)
@@ -62,10 +59,12 @@ jobs:
           "$executable" --smoke-test "leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&season=2025&importSessionId=smoke-session"
       - uses: actions/upload-artifact@v7
         with:
-          name: macos-${{ matrix.arch }}
+          name: macos
           path: |
             apps/desktop/dist/*.dmg
             apps/desktop/dist/*.zip
+            apps/desktop/dist/latest*.yml
+            apps/desktop/dist/*.blockmap
           if-no-files-found: error
 
   windows:
@@ -92,7 +91,10 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: windows-x64
-          path: apps/desktop/dist/*.exe
+          path: |
+            apps/desktop/dist/*.exe
+            apps/desktop/dist/latest*.yml
+            apps/desktop/dist/*.blockmap
           if-no-files-found: error
 
   linux:
@@ -116,6 +118,8 @@ jobs:
             apps/desktop/dist/*.AppImage
             apps/desktop/dist/*.deb
             apps/desktop/dist/*.zip
+            apps/desktop/dist/latest*.yml
+            apps/desktop/dist/*.blockmap
           if-no-files-found: error
 
   publish:

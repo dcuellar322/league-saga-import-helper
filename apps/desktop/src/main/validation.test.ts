@@ -38,7 +38,7 @@ describe('URL and deep-link validation', () => {
 
   it('parses LeagueSaga import deep links into helper settings', () => {
     const settings = parseDeepLinkSettings(
-      'leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=session-token&leagueId=123456&season=2026&importSessionId=import-1',
+      'leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=session-token&leagueId=123456&startYear=2026&importSessionId=import-1',
       { allowLocalhost: false }
     );
 
@@ -49,6 +49,20 @@ describe('URL and deep-link validation', () => {
       leagueId: '123456',
       season: 2026
     });
+  });
+
+  it('preserves provider context for future non-ESPN deep links', () => {
+    expect(
+      parseDeepLinkSettings('leaguesaga-import://start?provider=sleeper&leagueId=123456789012345678', {
+        allowLocalhost: false
+      })
+    ).toEqual({ provider: 'sleeper', leagueId: '123456789012345678' });
+  });
+
+  it('accepts the optional startYear deep-link parameter', () => {
+    expect(
+      parseDeepLinkSettings('leaguesaga-import://start?leagueId=123&startYear=2019', { allowLocalhost: false })
+    ).toEqual({ leagueId: '123', season: 2019 });
   });
 
   it('restricts LeagueSaga continuation URLs', () => {
@@ -92,6 +106,7 @@ describe('URL and deep-link validation', () => {
     const settings = createSettingsSchema({ allowLocalhost: true }).parse({
       apiBaseUrl: 'http://localhost:15173/api/',
       importToken: '',
+      provider: 'espn',
       leagueId: ' 123 ',
       season: ''
     });
@@ -99,6 +114,7 @@ describe('URL and deep-link validation', () => {
     expect(settings).toEqual({
       apiBaseUrl: 'http://localhost:15173/api',
       importToken: '',
+      provider: 'espn',
       leagueId: '123',
       season: undefined
     });

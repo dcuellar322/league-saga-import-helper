@@ -4,10 +4,7 @@ import { sanitizedPrivateLeaguePayload } from './fixtures/sanitized-private-leag
 
 const context = {
   leagueId: '123456',
-  season: 2026,
-  importSessionId: 'session-1',
-  helperVersion: '0.1.0-test',
-  platform: 'test'
+  season: 2026
 };
 
 describe('ESPN payload transform', () => {
@@ -28,7 +25,14 @@ describe('ESPN payload transform', () => {
           name: 'Circle League',
           size: 0,
           isPublic: false,
-          scoringSettings: { scoringType: 'H2H_POINTS' },
+          scheduleSettings: { matchupPeriodCount: 14, playoffTeamCount: 6, finalScoringPeriod: 17 },
+          rosterSettings: { lineupSlotCounts: { 0: 1, 2: 2, 20: 7 } },
+          scoringSettings: {
+            scoringType: 'H2H_POINTS',
+            statSettings: {
+              stats: { 53: { id: 53, name: 'Receptions', abbrev: 'REC', points: 1 } }
+            }
+          },
           cookieToken: 'do-not-keep',
           nested: { authorizationSecret: 'also-remove', harmless: true }
         },
@@ -110,16 +114,31 @@ describe('ESPN payload transform', () => {
 
     expect(bundle.league).toMatchObject({
       name: 'Circle League',
-      season: 2026,
       size: 2,
       scoringPeriodId: 4,
-      scoringType: 'H2H_POINTS',
       visibility: 'private'
     });
+    expect(bundle.season).toBe(2026);
+    expect(bundle.league.settings).toEqual({
+      schedule: { regularSeasonMatchupPeriods: 14, playoffTeamCount: 6, finalScoringPeriod: 17 },
+      roster: {
+        slots: [
+          { sourceId: '0', name: 'QB', count: 1 },
+          { sourceId: '2', name: 'RB', count: 2 },
+          { sourceId: '20', name: 'Bench', count: 7 }
+        ]
+      },
+      scoring: {
+        mode: 'H2H_POINTS',
+        format: 'ppr',
+        pointsPerReception: 1,
+        rules: [{ sourceId: '53', name: 'Receptions', abbreviation: 'REC', points: 1 }]
+      }
+    });
     expect(bundle.league.settings).not.toHaveProperty('cookieToken');
-    expect(bundle.league.settings.nested).toEqual({ harmless: true });
+    expect(bundle.league.settings).not.toHaveProperty('nested');
     expect(bundle.teams[0]).toMatchObject({
-      externalRef: { provider: 'espn', externalId: '1', rawKind: 'team' },
+      externalId: '1',
       displayName: 'Saga Keepers',
       ownerDisplayNames: ['Demo Commissioner'],
       finalStanding: 1
@@ -142,6 +161,52 @@ describe('ESPN payload transform', () => {
     expect(() => transformEspnPayload({ settings: { name: '' }, teams: [], schedule: [] }, context)).toThrow(
       'ESPN returned no teams.'
     );
+  });
+
+  it('normalizes array-shaped ESPN scoring rules', () => {
+    const bundle = transformEspnPayload(
+      {
+        settings: {
+          name: 'Array Scoring League',
+          scoringSettings: {
+            scoringType: 'H2H_POINTS',
+            statSettings: {
+              stats: [
+                {
+                  id: 53,
+                  name: 'Receptions',
+                  abbrev: 'REC',
+                  points: 0.5,
+                  pointsOverrides: { 2025: 1, 2026: 0.5 }
+                }
+              ]
+            }
+          }
+        },
+        teams: [
+          { id: 1, name: 'One' },
+          { id: 2, name: 'Two' }
+        ]
+      },
+      context
+    );
+
+    expect(bundle.league.settings).toMatchObject({
+      scoring: {
+        mode: 'H2H_POINTS',
+        format: 'half_ppr',
+        pointsPerReception: 0.5,
+        rules: [
+          {
+            sourceId: '53',
+            name: 'Receptions',
+            abbreviation: 'REC',
+            points: 0.5,
+            pointOverrides: { 2025: 1, 2026: 0.5 }
+          }
+        ]
+      }
+    });
   });
 
   it('handles optional ESPN shapes and transaction classifications', () => {
@@ -212,15 +277,15 @@ describe('ESPN payload transform', () => {
       name: 'Fallback Name',
       size: 2,
       visibility: 'public',
-      settings: { harmless: 'kept' }
+      settings: {}
     });
     expect(bundle.league.settings).not.toHaveProperty('tokenSecret');
-    expect(bundle.teams[0]).toMatchObject({ externalRef: { externalId: '10' }, displayName: 'Named Team' });
+    expect(bundle.teams[0]).toMatchObject({ externalId: '10', displayName: 'Named Team' });
     expect(bundle.teams[0]?.logoUrl).toBeUndefined();
     expect(bundle.rosterEntries).toHaveLength(1);
     expect(bundle.matchups).toHaveLength(1);
     expect(bundle.matchups[0]).toMatchObject({
-      externalRef: { externalId: '2026-2-10-11' },
+      externalId: '2026-2-10-11',
       winnerTeamExternalId: '11',
       home: { projectedScore: 88.5 }
     });
@@ -248,9 +313,9 @@ describe('ESPN payload transform', () => {
     );
     expect(bundle.transactions[0]?.items[0]?.player).toMatchObject({
       fullName: 'ESPN Player 777',
-      externalRef: { externalId: '777' }
+      externalId: '777'
     });
-    expect(bundle.metadata.warnings).toContain(
+    expect(bundle.warnings).toContain(
       '1 draft or transaction player names were unavailable; ESPN player IDs were preserved for matching.'
     );
   });

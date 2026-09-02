@@ -1,0 +1,319 @@
+{
+  "$ref": "#/definitions/LeagueSagaHistoryImport",
+  "definitions": {
+    "LeagueSagaHistoryImport": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "const": "league-history" },
+        "contractVersion": { "type": "string", "const": "0.2.0" },
+        "provider": { "type": "string", "enum": ["espn", "yahoo", "sleeper", "mock"] },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        "helper": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "version": { "type": "string", "minLength": 1 },
+            "platform": { "type": "string", "minLength": 1 }
+          },
+          "required": ["name", "version", "platform"],
+          "additionalProperties": false
+        },
+        "importSessionId": { "type": "string", "minLength": 1 },
+        "leagueExternalId": { "type": "string", "minLength": 1 },
+        "leagueName": { "type": "string", "minLength": 1 },
+        "startSeason": { "type": "integer", "minimum": 2000, "maximum": 2100 },
+        "endSeason": { "type": "integer", "minimum": 2000, "maximum": 2100 },
+        "seasons": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "season": { "type": "integer", "minimum": 2000, "maximum": 2100 },
+              "league": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 1 },
+                  "scoringPeriodId": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+                  "size": { "type": "integer", "exclusiveMinimum": 0, "maximum": 9007199254740991 },
+                  "visibility": { "default": "unknown", "type": "string", "enum": ["public", "private", "unknown"] },
+                  "settings": {
+                    "type": "object",
+                    "properties": {
+                      "schedule": {
+                        "type": "object",
+                        "properties": {
+                          "regularSeasonMatchupPeriods": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "playoffTeamCount": { "type": "integer", "exclusiveMinimum": 0, "maximum": 9007199254740991 },
+                          "finalScoringPeriod": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "roster": {
+                        "type": "object",
+                        "properties": {
+                          "slots": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "sourceId": { "type": "string", "minLength": 1 },
+                                "name": { "type": "string", "minLength": 1 },
+                                "count": { "type": "integer", "exclusiveMinimum": 0, "maximum": 9007199254740991 }
+                              },
+                              "required": ["sourceId", "name", "count"],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": ["slots"],
+                        "additionalProperties": false
+                      },
+                      "scoring": {
+                        "type": "object",
+                        "properties": {
+                          "mode": { "type": "string", "minLength": 1 },
+                          "format": { "type": "string", "enum": ["standard", "half_ppr", "ppr", "custom", "unknown"] },
+                          "pointsPerReception": { "type": "number" },
+                          "rules": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "sourceId": { "type": "string", "minLength": 1 },
+                                "name": { "type": "string", "minLength": 1 },
+                                "abbreviation": { "type": "string", "minLength": 1 },
+                                "points": { "type": "number" },
+                                "pointOverrides": {
+                                  "type": "object",
+                                  "propertyNames": { "type": "string" },
+                                  "additionalProperties": { "type": "number" }
+                                }
+                              },
+                              "required": ["sourceId", "points"],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": ["rules"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["name"],
+                "additionalProperties": false
+              },
+              "teams": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "externalId": { "type": "string", "minLength": 1 },
+                    "abbreviation": { "type": "string" },
+                    "location": { "type": "string" },
+                    "nickname": { "type": "string" },
+                    "displayName": { "type": "string", "minLength": 1 },
+                    "ownerDisplayNames": { "default": [], "type": "array", "items": { "type": "string" } },
+                    "logoUrl": { "type": "string", "format": "uri" },
+                    "playoffSeed": { "type": "integer", "exclusiveMinimum": 0, "maximum": 9007199254740991 },
+                    "finalStanding": { "type": "integer", "exclusiveMinimum": 0, "maximum": 9007199254740991 }
+                  },
+                  "required": ["externalId", "displayName"],
+                  "additionalProperties": false
+                }
+              },
+              "rosterEntries": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "teamExternalId": { "type": "string", "minLength": 1 },
+                    "player": {
+                      "type": "object",
+                      "properties": {
+                        "externalId": { "type": "string", "minLength": 1 },
+                        "fullName": { "type": "string", "minLength": 1 },
+                        "firstName": { "type": "string" },
+                        "lastName": { "type": "string" },
+                        "proTeam": { "type": "string" },
+                        "positions": { "default": [], "type": "array", "items": { "type": "string" } },
+                        "jersey": { "type": "string" },
+                        "status": { "type": "string" }
+                      },
+                      "required": ["externalId", "fullName"],
+                      "additionalProperties": false
+                    },
+                    "lineupSlot": { "type": "string" },
+                    "acquisitionType": { "type": "string" },
+                    "acquisitionDate": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "injuryStatus": { "type": "string" }
+                  },
+                  "required": ["teamExternalId", "player"],
+                  "additionalProperties": false
+                }
+              },
+              "matchups": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "externalId": { "type": "string", "minLength": 1 },
+                    "scoringPeriodId": { "type": "integer", "exclusiveMinimum": 0, "maximum": 9007199254740991 },
+                    "home": {
+                      "type": "object",
+                      "properties": {
+                        "teamExternalId": { "type": "string", "minLength": 1 },
+                        "score": { "type": "number" },
+                        "projectedScore": { "type": "number" },
+                        "winner": { "type": "boolean" }
+                      },
+                      "required": ["teamExternalId"],
+                      "additionalProperties": false
+                    },
+                    "away": {
+                      "type": "object",
+                      "properties": {
+                        "teamExternalId": { "type": "string", "minLength": 1 },
+                        "score": { "type": "number" },
+                        "projectedScore": { "type": "number" },
+                        "winner": { "type": "boolean" }
+                      },
+                      "required": ["teamExternalId"],
+                      "additionalProperties": false
+                    },
+                    "winnerTeamExternalId": { "type": "string" },
+                    "playoffTierType": { "type": "string" }
+                  },
+                  "required": ["externalId", "scoringPeriodId"],
+                  "additionalProperties": false
+                }
+              },
+              "draftPicks": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "externalId": { "type": "string", "minLength": 1 },
+                    "round": { "type": "integer", "exclusiveMinimum": 0, "maximum": 9007199254740991 },
+                    "roundPick": { "type": "integer", "exclusiveMinimum": 0, "maximum": 9007199254740991 },
+                    "overallPick": { "type": "integer", "exclusiveMinimum": 0, "maximum": 9007199254740991 },
+                    "teamExternalId": { "type": "string", "minLength": 1 },
+                    "player": {
+                      "type": "object",
+                      "properties": {
+                        "externalId": { "type": "string", "minLength": 1 },
+                        "fullName": { "type": "string", "minLength": 1 },
+                        "firstName": { "type": "string" },
+                        "lastName": { "type": "string" },
+                        "proTeam": { "type": "string" },
+                        "positions": { "default": [], "type": "array", "items": { "type": "string" } },
+                        "jersey": { "type": "string" },
+                        "status": { "type": "string" }
+                      },
+                      "required": ["externalId", "fullName"],
+                      "additionalProperties": false
+                    },
+                    "keeper": { "type": "boolean" },
+                    "auctionPrice": { "type": "number" }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "transactions": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "externalId": { "type": "string", "minLength": 1 },
+                    "occurredAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "status": { "type": "string" },
+                    "items": {
+                      "default": [],
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": ["add", "drop", "trade", "draft", "waiver", "free_agent", "unknown"]
+                          },
+                          "teamExternalId": { "type": "string" },
+                          "player": {
+                            "type": "object",
+                            "properties": {
+                              "externalId": { "type": "string", "minLength": 1 },
+                              "fullName": { "type": "string", "minLength": 1 },
+                              "firstName": { "type": "string" },
+                              "lastName": { "type": "string" },
+                              "proTeam": { "type": "string" },
+                              "positions": { "default": [], "type": "array", "items": { "type": "string" } },
+                              "jersey": { "type": "string" },
+                              "status": { "type": "string" }
+                            },
+                            "required": ["externalId", "fullName"],
+                            "additionalProperties": false
+                          },
+                          "notes": { "type": "string" }
+                        },
+                        "required": ["type"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "notes": { "type": "string" }
+                  },
+                  "required": ["externalId"],
+                  "additionalProperties": false
+                }
+              },
+              "warnings": { "default": [], "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["season", "league", "teams"],
+            "additionalProperties": false
+          }
+        },
+        "warnings": { "default": [], "type": "array", "items": { "type": "string" } }
+      },
+      "required": [
+        "kind",
+        "contractVersion",
+        "provider",
+        "generatedAt",
+        "helper",
+        "leagueExternalId",
+        "leagueName",
+        "startSeason",
+        "endSeason",
+        "seasons"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
