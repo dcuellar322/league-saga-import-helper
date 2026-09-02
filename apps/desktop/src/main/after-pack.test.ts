@@ -12,9 +12,9 @@ afterEach(async () => {
 
 describe('macOS packaged metadata hardening', () => {
   it('loads the ESM plist dependency and removes unused permission descriptions', async () => {
-    const appOutDir = await mkdtemp(join(tmpdir(), 'leaguelore-after-pack-'));
+    const appOutDir = await mkdtemp(join(tmpdir(), 'leaguesaga-after-pack-'));
     temporaryDirectories.push(appOutDir);
-    const contentsDirectory = join(appOutDir, 'LeagueLore Import Helper.app', 'Contents');
+    const contentsDirectory = join(appOutDir, 'LeagueSaga Import Helper.app', 'Contents');
     const infoPath = join(contentsDirectory, 'Info.plist');
     await mkdir(contentsDirectory, { recursive: true });
     await writeFile(
@@ -22,7 +22,7 @@ describe('macOS packaged metadata hardening', () => {
       `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-<key>CFBundleName</key><string>LeagueLore Import Helper</string>
+<key>CFBundleName</key><string>LeagueSaga Import Helper</string>
 <key>NSCameraUsageDescription</key><string>Not used</string>
 <key>NSMicrophoneUsageDescription</key><string>Not used</string>
 </dict></plist>`,
@@ -32,7 +32,7 @@ describe('macOS packaged metadata hardening', () => {
     await hardenPackagedMetadata({
       electronPlatformName: 'darwin',
       appOutDir,
-      packager: { appInfo: { productFilename: 'LeagueLore Import Helper' } }
+      packager: { appInfo: { productFilename: 'LeagueSaga Import Helper' } }
     });
 
     const info = await readFile(infoPath, 'utf-8');
@@ -48,7 +48,7 @@ describe('macOS packaged metadata hardening', () => {
       hardenPackagedMetadata({
         electronPlatformName: 'linux',
         appOutDir: '/does/not/exist',
-        packager: { appInfo: { productFilename: 'LeagueLore Import Helper' } }
+        packager: { appInfo: { productFilename: 'LeagueSaga Import Helper' } }
       })
     ).resolves.toBeUndefined();
   });

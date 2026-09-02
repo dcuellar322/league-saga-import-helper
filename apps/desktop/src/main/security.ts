@@ -1,11 +1,6 @@
 import { shell, type BrowserWindow, type WebContents } from 'electron';
 
-const TRUSTED_EXTERNAL_HOSTS = new Set([
-  'portal.leagueloreapp.com',
-  'www.leagueloreapp.com',
-  'leagueloreapp.com',
-  'github.com'
-]);
+const TRUSTED_EXTERNAL_HOSTS = new Set(['portal.leaguesaga.com', 'www.leaguesaga.com', 'leaguesaga.com', 'github.com']);
 
 const ESPN_AUTH_HOST_SUFFIXES = [
   'espn.com',
@@ -72,14 +67,14 @@ function openTrustedExternal(url: string): void {
   }
 }
 
-export function openTrustedLeagueLoreUrl(url: string): void {
+export function openTrustedLeagueSagaUrl(url: string): void {
   const parsed = new URL(url);
   if (
     parsed.protocol !== 'https:' ||
     !TRUSTED_EXTERNAL_HOSTS.has(parsed.hostname) ||
     parsed.hostname === 'github.com'
   ) {
-    throw new Error('Rejected untrusted LeagueLore URL.');
+    throw new Error('Rejected untrusted LeagueSaga URL.');
   }
   void shell.openExternal(parsed.toString());
 }
@@ -89,7 +84,7 @@ export function openTrustedUpdateUrl(url: string): void {
   if (
     parsed.protocol !== 'https:' ||
     parsed.hostname !== 'github.com' ||
-    !parsed.pathname.startsWith('/dcuellar322/leaguelore-import-helper/releases/')
+    !parsed.pathname.startsWith('/dcuellar322/league-saga-import-helper/releases/')
   ) {
     throw new Error('Rejected untrusted update URL.');
   }
@@ -101,7 +96,7 @@ export function openTrustedProjectUrl(url: string): void {
   if (
     parsed.protocol !== 'https:' ||
     parsed.hostname !== 'github.com' ||
-    !parsed.pathname.startsWith('/dcuellar322/leaguelore-import-helper/')
+    !parsed.pathname.startsWith('/dcuellar322/league-saga-import-helper/')
   ) {
     throw new Error('Rejected untrusted project URL.');
   }

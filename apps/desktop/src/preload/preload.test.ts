@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { DeepLinkSettings, LeagueLoreBridge } from '../shared/ipc.js';
+import type { DeepLinkSettings, LeagueSagaBridge } from '../shared/ipc.js';
 
 const electron = vi.hoisted(() => {
-  let bridge: LeagueLoreBridge | undefined;
+  let bridge: LeagueSagaBridge | undefined;
   const invoke = vi.fn(async (_channel: string, ..._args: unknown[]) => undefined);
   const on = vi.fn((_channel: string, _listener: (event: unknown, settings: DeepLinkSettings) => void) => undefined);
   const removeListener = vi.fn(
@@ -10,7 +10,7 @@ const electron = vi.hoisted(() => {
   );
   return {
     contextBridge: {
-      exposeInMainWorld: vi.fn((_name: string, value: LeagueLoreBridge) => {
+      exposeInMainWorld: vi.fn((_name: string, value: LeagueSagaBridge) => {
         bridge = value;
       })
     },
@@ -46,9 +46,9 @@ describe('preload bridge', () => {
     await bridge.saveBundleToDisk({} as never);
     await bridge.uploadBundle({} as never);
     await bridge.cancelUpload();
-    await bridge.openLeagueLoreUrl('https://www.leagueloreapp.com/imports/1');
-    await bridge.openUpdateUrl('https://github.com/dcuellar322/leaguelore-import-helper/releases/1');
-    await bridge.openProjectUrl('https://github.com/dcuellar322/leaguelore-import-helper/');
+    await bridge.openLeagueSagaUrl('https://www.leaguesaga.com/imports/1');
+    await bridge.openUpdateUrl('https://github.com/dcuellar322/league-saga-import-helper/releases/1');
+    await bridge.openProjectUrl('https://github.com/dcuellar322/league-saga-import-helper/');
     await bridge.checkForUpdates();
     await bridge.saveDiagnostics();
 
@@ -67,7 +67,7 @@ describe('preload bridge', () => {
       'bundle:save-to-disk',
       'bundle:upload',
       'bundle:cancel-upload',
-      'app:open-leaguelore-url',
+      'app:open-leaguesaga-url',
       'app:open-update-url',
       'app:open-project-url',
       'app:check-for-updates',

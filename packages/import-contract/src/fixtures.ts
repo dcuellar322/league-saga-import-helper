@@ -1,16 +1,16 @@
 import { IMPORT_CONTRACT_VERSION } from './version.js';
-import type { LeagueLoreImportBundle } from './schema.js';
+import type { LeagueSagaImportBundle } from './schema.js';
 
-export function createMockImportBundle(overrides: Partial<LeagueLoreImportBundle> = {}): LeagueLoreImportBundle {
+export function createMockImportBundle(overrides: Partial<LeagueSagaImportBundle> = {}): LeagueSagaImportBundle {
   const now = new Date().toISOString();
   const leagueExternalId = 'mock-league-2026';
-  const bundle: LeagueLoreImportBundle = {
+  const bundle: LeagueSagaImportBundle = {
     metadata: {
       contractVersion: IMPORT_CONTRACT_VERSION,
       source: 'mock',
       generatedAt: now,
       helper: {
-        name: 'LeagueLore Import Helper',
+        name: 'LeagueSaga Import Helper',
         version: '0.1.0',
         platform: 'mock'
       },
@@ -18,7 +18,7 @@ export function createMockImportBundle(overrides: Partial<LeagueLoreImportBundle
     },
     league: {
       externalRef: { provider: 'mock', externalId: leagueExternalId },
-      name: 'LeagueLore Demo League',
+      name: 'LeagueSaga Demo League',
       season: 2026,
       size: 2,
       visibility: 'private',
@@ -28,10 +28,10 @@ export function createMockImportBundle(overrides: Partial<LeagueLoreImportBundle
       {
         externalRef: { provider: 'mock', externalId: '1' },
         leagueExternalId,
-        abbreviation: 'LL',
+        abbreviation: 'SK',
         location: 'League',
-        nickname: 'Lorekeepers',
-        displayName: 'League Lorekeepers',
+        nickname: 'Keepers',
+        displayName: 'Saga Keepers',
         ownerDisplayNames: ['Demo Commissioner']
       },
       {

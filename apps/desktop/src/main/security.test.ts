@@ -7,7 +7,7 @@ import {
   hardenRendererNavigation,
   hardenWindow,
   isAllowedEspnAuthUrl,
-  openTrustedLeagueLoreUrl,
+  openTrustedLeagueSagaUrl,
   openTrustedProjectUrl,
   openTrustedUpdateUrl
 } from './security.js';
@@ -23,14 +23,14 @@ describe('window and external navigation security', () => {
     expect(isAllowedEspnAuthUrl('not a URL')).toBe(false);
   });
 
-  it('opens only purpose-specific LeagueLore and GitHub URLs', () => {
-    openTrustedLeagueLoreUrl('https://portal.leagueloreapp.com/imports/1');
-    openTrustedLeagueLoreUrl('https://www.leagueloreapp.com/imports/1');
-    openTrustedUpdateUrl('https://github.com/dcuellar322/leaguelore-import-helper/releases/tag/v0.2.0');
-    openTrustedProjectUrl('https://github.com/dcuellar322/leaguelore-import-helper/blob/master/docs/PRIVACY.md');
+  it('opens only purpose-specific LeagueSaga and GitHub URLs', () => {
+    openTrustedLeagueSagaUrl('https://portal.leaguesaga.com/imports/1');
+    openTrustedLeagueSagaUrl('https://www.leaguesaga.com/imports/1');
+    openTrustedUpdateUrl('https://github.com/dcuellar322/league-saga-import-helper/releases/tag/v0.2.0');
+    openTrustedProjectUrl('https://github.com/dcuellar322/league-saga-import-helper/blob/master/docs/PRIVACY.md');
     expect(openExternal).toHaveBeenCalledTimes(4);
 
-    expect(() => openTrustedLeagueLoreUrl('https://github.com/')).toThrow('Rejected untrusted LeagueLore URL');
+    expect(() => openTrustedLeagueSagaUrl('https://github.com/')).toThrow('Rejected untrusted LeagueSaga URL');
     expect(() => openTrustedUpdateUrl('https://github.com/example/project/releases/1')).toThrow(
       'Rejected untrusted update URL'
     );
@@ -52,7 +52,7 @@ describe('window and external navigation security', () => {
     };
     hardenRendererNavigation(webContents as never, (url) => url === 'app://bundle/index.html');
 
-    expect(openHandler?.({ url: 'https://www.leagueloreapp.com/help' })).toEqual({ action: 'deny' });
+    expect(openHandler?.({ url: 'https://www.leaguesaga.com/help' })).toEqual({ action: 'deny' });
     expect(openHandler?.({ url: 'https://evil.example/' })).toEqual({ action: 'deny' });
     expect(openExternal).toHaveBeenCalledTimes(1);
 
@@ -61,7 +61,7 @@ describe('window and external navigation security', () => {
     expect(allowedEvent.preventDefault).not.toHaveBeenCalled();
 
     const blockedEvent = { preventDefault: vi.fn() };
-    navigateHandler?.(blockedEvent, 'https://github.com/dcuellar322/leaguelore-import-helper/');
+    navigateHandler?.(blockedEvent, 'https://github.com/dcuellar322/league-saga-import-helper/');
     expect(blockedEvent.preventDefault).toHaveBeenCalledOnce();
     expect(openExternal).toHaveBeenCalledTimes(2);
   });

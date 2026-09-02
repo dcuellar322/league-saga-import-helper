@@ -1,8 +1,8 @@
-import type { LeagueLoreBridge } from '../shared/ipc';
+import type { LeagueSagaBridge } from '../shared/ipc';
 
 declare global {
   interface Window {
-    leagueLore: LeagueLoreBridge;
+    leagueSaga: LeagueSagaBridge;
   }
 }
 

@@ -1,8 +1,8 @@
 {
-  "name": "leaguelore-import-helper-repo",
+  "name": "league-saga-import-helper-repo",
   "private": true,
   "version": "0.1.0",
-  "description": "Desktop ESPN import helper for LeagueLore.",
+  "description": "Desktop ESPN import helper for LeagueSaga.",
   "license": "MIT",
   "workspaces": [
     "apps/*",

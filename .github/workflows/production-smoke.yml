@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: production-smoke
     env:
-      LEAGUELORE_SMOKE_TOKEN: ${{ secrets.LEAGUELORE_SMOKE_TOKEN }}
-      LEAGUELORE_SMOKE_SESSION_ID: ${{ secrets.LEAGUELORE_SMOKE_SESSION_ID }}
+      LEAGUESAGA_SMOKE_TOKEN: ${{ secrets.LEAGUESAGA_SMOKE_TOKEN }}
+      LEAGUESAGA_SMOKE_SESSION_ID: ${{ secrets.LEAGUESAGA_SMOKE_SESSION_ID }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -22,5 +22,5 @@ jobs:
       - run: npm ci
       - run: npm run build:contract
       - name: Require an approved one-time smoke session
-        run: test -n "$LEAGUELORE_SMOKE_TOKEN" && test -n "$LEAGUELORE_SMOKE_SESSION_ID"
+        run: test -n "$LEAGUESAGA_SMOKE_TOKEN" && test -n "$LEAGUESAGA_SMOKE_SESSION_ID"
       - run: npm run smoke:production-upload

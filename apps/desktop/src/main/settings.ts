@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { z } from 'zod';
 import type { HelperSettings } from '../shared/ipc.js';
 import { createSettingsSchema } from './validation.js';
-import { defaultLeagueLoreApiBaseUrl } from '../shared/environment.js';
+import { defaultLeagueSagaApiBaseUrl } from '../shared/environment.js';
 
 const PersistedSettingsSchema = z.object({
   apiBaseUrl: z.string().optional(),
@@ -14,8 +14,8 @@ const PersistedSettingsSchema = z.object({
 
 function defaultSettings(): HelperSettings {
   return {
-    apiBaseUrl: process.env.LEAGUELORE_API_BASE ?? defaultLeagueLoreApiBaseUrl(app.isPackaged),
-    importToken: process.env.LEAGUELORE_IMPORT_TOKEN ?? '',
+    apiBaseUrl: process.env.LEAGUESAGA_API_BASE ?? defaultLeagueSagaApiBaseUrl(app.isPackaged),
+    importToken: process.env.LEAGUESAGA_IMPORT_TOKEN ?? '',
     importSessionId: undefined,
     leagueId: ''
   };
@@ -36,8 +36,8 @@ export async function readSettings(): Promise<HelperSettings> {
     const parsed = settingsSchema().parse({
       ...defaultSettings(),
       ...persisted,
-      apiBaseUrl: process.env.LEAGUELORE_API_BASE ?? defaultLeagueLoreApiBaseUrl(app.isPackaged),
-      importToken: process.env.LEAGUELORE_IMPORT_TOKEN ?? ''
+      apiBaseUrl: process.env.LEAGUESAGA_API_BASE ?? defaultLeagueSagaApiBaseUrl(app.isPackaged),
+      importToken: process.env.LEAGUESAGA_IMPORT_TOKEN ?? ''
     });
     return parsed;
   } catch {

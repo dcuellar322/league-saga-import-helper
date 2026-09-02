@@ -1,8 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { DeepLinkSettings, HelperSettings, ImportParams, LeagueLoreBridge, UploadParams } from '../shared/ipc.js';
-import type { LeagueLoreImportBundle } from '@leaguelore/import-contract';
+import type { DeepLinkSettings, HelperSettings, ImportParams, LeagueSagaBridge, UploadParams } from '../shared/ipc.js';
+import type { LeagueSagaImportBundle } from '@leaguesaga/import-contract';
 
-const bridge: LeagueLoreBridge = {
+const bridge: LeagueSagaBridge = {
   appVersion: () => ipcRenderer.invoke('app:version'),
   runtimeConfig: () => ipcRenderer.invoke('app:runtime-config'),
   rendererReady: () => ipcRenderer.invoke('app:renderer-ready'),
@@ -14,10 +14,10 @@ const bridge: LeagueLoreBridge = {
   importFromEspn: (params: ImportParams) => ipcRenderer.invoke('espn:import', params),
   cancelEspnImport: () => ipcRenderer.invoke('espn:cancel-import'),
   createMockImport: (params: ImportParams) => ipcRenderer.invoke('mock:import', params),
-  saveBundleToDisk: (bundle: LeagueLoreImportBundle) => ipcRenderer.invoke('bundle:save-to-disk', bundle),
+  saveBundleToDisk: (bundle: LeagueSagaImportBundle) => ipcRenderer.invoke('bundle:save-to-disk', bundle),
   uploadBundle: (params: UploadParams) => ipcRenderer.invoke('bundle:upload', params),
   cancelUpload: () => ipcRenderer.invoke('bundle:cancel-upload'),
-  openLeagueLoreUrl: (url: string) => ipcRenderer.invoke('app:open-leaguelore-url', url),
+  openLeagueSagaUrl: (url: string) => ipcRenderer.invoke('app:open-leaguesaga-url', url),
   openUpdateUrl: (url: string) => ipcRenderer.invoke('app:open-update-url', url),
   openProjectUrl: (url: string) => ipcRenderer.invoke('app:open-project-url', url),
   checkForUpdates: () => ipcRenderer.invoke('app:check-for-updates'),
@@ -29,4 +29,4 @@ const bridge: LeagueLoreBridge = {
   }
 };
 
-contextBridge.exposeInMainWorld('leagueLore', bridge);
+contextBridge.exposeInMainWorld('leagueSaga', bridge);

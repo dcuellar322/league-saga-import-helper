@@ -10,7 +10,7 @@ import { exportDiagnostics, recordDiagnostic } from './diagnostics.js';
 
 describe('privacy-safe diagnostics', () => {
   beforeEach(async () => {
-    userData = await mkdtemp(join(tmpdir(), 'leaguelore-diagnostics-'));
+    userData = await mkdtemp(join(tmpdir(), 'leaguesaga-diagnostics-'));
   });
   afterEach(async () => {
     await rm(userData, { recursive: true, force: true });

@@ -1,5 +1,5 @@
 import type { ClipboardEvent, ReactNode } from 'react';
-import type { LeagueLoreImportBundle } from '@leaguelore/import-contract';
+import type { LeagueSagaImportBundle } from '@leaguesaga/import-contract';
 import type { HelperSettings, SessionStatus, UploadResult } from '../shared/ipc';
 import { parseEspnLeagueInput } from '../shared/espn-input';
 import type { IncludedCategories, OptionalImportCategory } from './import-review';
@@ -107,11 +107,11 @@ export function SetupStep({
           <Icon name={hasImportSession ? 'check' : 'external'} />
         </span>
         <div>
-          <strong>{hasImportSession ? 'LeagueLore session connected' : 'Manual setup'}</strong>
+          <strong>{hasImportSession ? 'LeagueSaga session connected' : 'Manual setup'}</strong>
           <p>
             {hasImportSession
-              ? 'A secure, one-time upload session was provided by LeagueLore.'
-              : 'You can create and save an import locally. Open the helper from LeagueLore when you are ready to send it.'}
+              ? 'A secure, one-time upload session was provided by LeagueSaga.'
+              : 'You can create and save an import locally. Open the helper from LeagueSaga when you are ready to send it.'}
           </p>
         </div>
       </div>
@@ -269,8 +269,8 @@ export function PreviewStep({
   onUpload,
   onCancel
 }: {
-  sourceBundle: LeagueLoreImportBundle | null;
-  bundle: LeagueLoreImportBundle | null;
+  sourceBundle: LeagueSagaImportBundle | null;
+  bundle: LeagueSagaImportBundle | null;
   includedCategories: IncludedCategories;
   setIncludedCategories: (value: IncludedCategories) => void;
   busyAction: BusyAction | null;
@@ -309,13 +309,13 @@ export function PreviewStep({
           {busyAction === 'saving' ? 'Saving…' : 'Save JSON locally'} <Icon name="download" />
         </button>
         <button className="primary" disabled={busy || !canUpload} onClick={onUpload}>
-          {busyAction === 'uploading' ? 'Sending securely…' : 'Send to LeagueLore'} <Icon name="upload" />
+          {busyAction === 'uploading' ? 'Sending securely…' : 'Send to LeagueSaga'} <Icon name="upload" />
         </button>
         {busyAction === 'uploading' && <button onClick={onCancel}>Cancel upload</button>}
       </div>
       {!canUpload && (
         <p className="action-note">
-          <Icon name="lock" /> Sending is available when this helper is opened from LeagueLore. Local export is always
+          <Icon name="lock" /> Sending is available when this helper is opened from LeagueSaga. Local export is always
           available.
         </p>
       )}
@@ -340,7 +340,7 @@ export function UploadStep({
   onCancel,
   onContinue
 }: {
-  bundle: LeagueLoreImportBundle | null;
+  bundle: LeagueSagaImportBundle | null;
   result: UploadResult | null;
   busyAction: BusyAction | null;
   canUpload: boolean;
@@ -370,8 +370,8 @@ export function UploadStep({
         title={result?.ok ? 'Import delivered' : 'Finish your import'}
         body={
           result?.ok
-            ? 'LeagueLore received the reviewed bundle and will guide you through the final preview.'
-            : 'Save a local copy or send the reviewed bundle to LeagueLore.'
+            ? 'LeagueSaga received the reviewed bundle and will guide you through the final preview.'
+            : 'Save a local copy or send the reviewed bundle to LeagueSaga.'
         }
       />
       {result ? (
@@ -380,7 +380,7 @@ export function UploadStep({
             <Icon name={result.ok ? 'check' : 'external'} />
           </span>
           <div>
-            <strong>{result.ok ? 'LeagueLore received your data' : 'The upload did not complete'}</strong>
+            <strong>{result.ok ? 'LeagueSaga received your data' : 'The upload did not complete'}</strong>
             <p>{result.message}</p>
           </div>
         </div>
@@ -393,7 +393,7 @@ export function UploadStep({
         </button>
         {result?.ok && result.continuationUrl ? (
           <button className="primary" disabled={busy} onClick={onContinue}>
-            Continue in LeagueLore <Icon name="external" />
+            Continue in LeagueSaga <Icon name="external" />
           </button>
         ) : (
           !result?.ok && (
@@ -402,7 +402,7 @@ export function UploadStep({
                 ? 'Sending securely…'
                 : result?.retryable
                   ? 'Retry upload'
-                  : 'Send to LeagueLore'}{' '}
+                  : 'Send to LeagueSaga'}{' '}
               <Icon name="upload" />
             </button>
           )
@@ -411,18 +411,18 @@ export function UploadStep({
       </div>
       {result?.ok && !result.continuationUrl && (
         <p className="action-note">
-          <Icon name="check" /> Return to the LeagueLore browser tab to continue the preview.
+          <Icon name="check" /> Return to the LeagueSaga browser tab to continue the preview.
         </p>
       )}
       {!result?.ok && !canUpload && (
         <p className="action-note">
-          <Icon name="lock" /> Open this helper from LeagueLore to enable secure sending.
+          <Icon name="lock" /> Open this helper from LeagueSaga to enable secure sending.
         </p>
       )}
       {result?.response ? (
         <details className="json-preview">
           <summary>
-            <Icon name="file" /> View LeagueLore response <Icon name="chevron" />
+            <Icon name="file" /> View LeagueSaga response <Icon name="chevron" />
           </summary>
           <pre>{JSON.stringify(result.response, null, 2)}</pre>
         </details>
@@ -436,7 +436,7 @@ function ReviewCategories({
   included,
   onChange
 }: {
-  sourceBundle: LeagueLoreImportBundle;
+  sourceBundle: LeagueSagaImportBundle;
   included: IncludedCategories;
   onChange: (value: IncludedCategories) => void;
 }) {
@@ -496,7 +496,7 @@ function ReviewCategories({
   );
 }
 
-function HumanReadablePreview({ bundle }: { bundle: LeagueLoreImportBundle }) {
+function HumanReadablePreview({ bundle }: { bundle: LeagueSagaImportBundle }) {
   const teamNames = new Map(bundle.teams.map((team) => [team.externalRef.externalId, team.displayName]));
   return (
     <section className="readable-preview" aria-labelledby="readable-preview-title">
@@ -617,7 +617,7 @@ function CredentialCheck({ label, detected }: { label: string; detected: boolean
   );
 }
 
-function BundleHero({ bundle, compact = false }: { bundle: LeagueLoreImportBundle; compact?: boolean }) {
+function BundleHero({ bundle, compact = false }: { bundle: LeagueSagaImportBundle; compact?: boolean }) {
   return (
     <div className={`bundle-hero ${compact ? 'compact' : ''}`}>
       <span className="bundle-icon">
@@ -637,7 +637,7 @@ function BundleHero({ bundle, compact = false }: { bundle: LeagueLoreImportBundl
   );
 }
 
-function BundleSummary({ bundle }: { bundle: LeagueLoreImportBundle }) {
+function BundleSummary({ bundle }: { bundle: LeagueSagaImportBundle }) {
   const items = [
     ['Teams', bundle.teams.length],
     ['Roster entries', bundle.rosterEntries.length],

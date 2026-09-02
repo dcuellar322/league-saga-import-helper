@@ -1,7 +1,7 @@
 import { session } from 'electron';
 import type { SessionStatus } from '../../shared/ipc.js';
 
-export const ESPN_SESSION_PARTITION = 'leaguelore-espn-import';
+export const ESPN_SESSION_PARTITION = 'leaguesaga-espn-import';
 
 const IMPORTANT_COOKIE_NAMES = new Set(['SWID', 'espn_s2']);
 const ESPN_COOKIE_HOSTS = ['espn.com', 'go.com', 'disney.com'];

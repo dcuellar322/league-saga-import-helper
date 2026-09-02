@@ -8,42 +8,42 @@ import {
   findDeepLinkArg,
   isAllowedLocalRendererUrl,
   normalizeApiBaseUrl,
-  normalizeLeagueLoreNavigationUrl,
+  normalizeLeagueSagaNavigationUrl,
   parseDeepLinkSettings
 } from './validation.js';
 
 describe('URL and deep-link validation', () => {
-  it('normalizes production and local LeagueLore API URLs', () => {
-    expect(normalizeApiBaseUrl('https://portal.leagueloreapp.com/api/v1///', { allowLocalhost: false })).toBe(
-      'https://portal.leagueloreapp.com/api/v1'
+  it('normalizes production and local LeagueSaga API URLs', () => {
+    expect(normalizeApiBaseUrl('https://portal.leaguesaga.com/api/v1///', { allowLocalhost: false })).toBe(
+      'https://portal.leaguesaga.com/api/v1'
     );
     expect(normalizeApiBaseUrl('http://127.0.0.1:15173/', { allowLocalhost: true })).toBe('http://127.0.0.1:15173');
   });
 
   it('rejects unsafe API URL shapes', () => {
-    expect(() =>
-      normalizeApiBaseUrl('https://user:secret@portal.leagueloreapp.com', { allowLocalhost: false })
-    ).toThrow('must not contain credentials');
-    expect(() => normalizeApiBaseUrl('http://portal.leagueloreapp.com', { allowLocalhost: false })).toThrow(
-      'must be https://portal.leagueloreapp.com'
+    expect(() => normalizeApiBaseUrl('https://user:secret@portal.leaguesaga.com', { allowLocalhost: false })).toThrow(
+      'must not contain credentials'
+    );
+    expect(() => normalizeApiBaseUrl('http://portal.leaguesaga.com', { allowLocalhost: false })).toThrow(
+      'must be https://portal.leaguesaga.com'
     );
     expect(() => normalizeApiBaseUrl('http://example.com', { allowLocalhost: true })).toThrow(
-      'must be https://portal.leagueloreapp.com'
+      'must be https://portal.leaguesaga.com'
     );
-    expect(() => normalizeApiBaseUrl('https://www.leagueloreapp.com', { allowLocalhost: false })).toThrow();
+    expect(() => normalizeApiBaseUrl('https://www.leaguesaga.com', { allowLocalhost: false })).toThrow();
     expect(() =>
-      normalizeApiBaseUrl('https://portal.leagueloreapp.com.evil.example', { allowLocalhost: false })
+      normalizeApiBaseUrl('https://portal.leaguesaga.com.evil.example', { allowLocalhost: false })
     ).toThrow();
   });
 
-  it('parses LeagueLore import deep links into helper settings', () => {
+  it('parses LeagueSaga import deep links into helper settings', () => {
     const settings = parseDeepLinkSettings(
-      'leaguelore-import://start?apiBase=https%3A%2F%2Fportal.leagueloreapp.com&token=session-token&importSessionId=import-1&leagueId=123456&season=2026',
+      'leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=session-token&leagueId=123456&season=2026&importSessionId=import-1',
       { allowLocalhost: false }
     );
 
     expect(settings).toEqual({
-      apiBaseUrl: 'https://portal.leagueloreapp.com',
+      apiBaseUrl: 'https://portal.leaguesaga.com',
       importToken: 'session-token',
       importSessionId: 'import-1',
       leagueId: '123456',
@@ -51,23 +51,23 @@ describe('URL and deep-link validation', () => {
     });
   });
 
-  it('restricts LeagueLore continuation URLs', () => {
+  it('restricts LeagueSaga continuation URLs', () => {
     expect(
-      normalizeLeagueLoreNavigationUrl('https://portal.leagueloreapp.com/imports/preview?id=1', {
+      normalizeLeagueSagaNavigationUrl('https://portal.leaguesaga.com/imports/preview?id=1', {
         allowLocalhost: false
       })
-    ).toBe('https://portal.leagueloreapp.com/imports/preview?id=1');
+    ).toBe('https://portal.leaguesaga.com/imports/preview?id=1');
     expect(() =>
-      normalizeLeagueLoreNavigationUrl('https://evil.example/imports/preview', { allowLocalhost: false })
+      normalizeLeagueSagaNavigationUrl('https://evil.example/imports/preview', { allowLocalhost: false })
     ).toThrow();
   });
 
   it('ignores invalid or unrelated deep links', () => {
-    expect(parseDeepLinkSettings('https://portal.leagueloreapp.com', { allowLocalhost: false })).toBeNull();
-    expect(parseDeepLinkSettings('leaguelore-import://session?leagueId=abc', { allowLocalhost: false })).toBeNull();
+    expect(parseDeepLinkSettings('https://portal.leaguesaga.com', { allowLocalhost: false })).toBeNull();
+    expect(parseDeepLinkSettings('leaguesaga-import://session?leagueId=abc', { allowLocalhost: false })).toBeNull();
     expect(
       parseDeepLinkSettings(
-        'leaguelore-import://start?apiBase=http%3A%2F%2Flocalhost%3A15173&token=secret&leagueId=123',
+        'leaguesaga-import://start?apiBase=http%3A%2F%2Flocalhost%3A15173&token=secret&leagueId=123',
         { allowLocalhost: false }
       )
     ).toBeNull();
@@ -75,8 +75,8 @@ describe('URL and deep-link validation', () => {
 
   it('finds deep-link argv values from packaged and development invocations', () => {
     expect(
-      findDeepLinkArg(['/Applications/LeagueLore Import Helper.app', 'leaguelore-import://session?leagueId=1'])
-    ).toBe('leaguelore-import://session?leagueId=1');
+      findDeepLinkArg(['/Applications/LeagueSaga Import Helper.app', 'leaguesaga-import://session?leagueId=1'])
+    ).toBe('leaguesaga-import://session?leagueId=1');
     expect(findDeepLinkArg(['/usr/local/bin/electron', '.', '--flag'])).toBeUndefined();
   });
 
@@ -105,7 +105,7 @@ describe('URL and deep-link validation', () => {
 
     expect(() =>
       createUploadParamsSchema({ allowLocalhost: false }).parse({
-        apiBaseUrl: 'https://portal.leagueloreapp.com',
+        apiBaseUrl: 'https://portal.leaguesaga.com',
         importToken: '',
         bundle: {}
       })

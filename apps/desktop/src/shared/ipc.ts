@@ -1,4 +1,4 @@
-import type { LeagueLoreImportBundle } from '@leaguelore/import-contract';
+import type { LeagueSagaImportBundle } from '@leaguesaga/import-contract';
 
 export type SessionStatus = {
   isSignedIn: boolean;
@@ -26,7 +26,7 @@ export type ImportParams = {
 export type UploadParams = {
   apiBaseUrl: string;
   importToken: string;
-  bundle: LeagueLoreImportBundle;
+  bundle: LeagueSagaImportBundle;
 };
 
 export type UploadResult = {
@@ -40,7 +40,7 @@ export type UploadResult = {
 };
 
 export type ImportResult = {
-  bundle: LeagueLoreImportBundle;
+  bundle: LeagueSagaImportBundle;
   warnings: string[];
 };
 
@@ -59,7 +59,7 @@ export type UpdateInfo = {
 
 export type DeepLinkSettings = Partial<HelperSettings>;
 
-export type LeagueLoreBridge = {
+export type LeagueSagaBridge = {
   appVersion: () => Promise<string>;
   runtimeConfig: () => Promise<RuntimeConfig>;
   rendererReady: () => Promise<DeepLinkSettings | null>;
@@ -71,10 +71,10 @@ export type LeagueLoreBridge = {
   importFromEspn: (params: ImportParams) => Promise<ImportResult>;
   cancelEspnImport: () => Promise<void>;
   createMockImport: (params: ImportParams) => Promise<ImportResult>;
-  saveBundleToDisk: (bundle: LeagueLoreImportBundle) => Promise<{ canceled: boolean; filePath?: string }>;
+  saveBundleToDisk: (bundle: LeagueSagaImportBundle) => Promise<{ canceled: boolean; filePath?: string }>;
   uploadBundle: (params: UploadParams) => Promise<UploadResult>;
   cancelUpload: () => Promise<void>;
-  openLeagueLoreUrl: (url: string) => Promise<void>;
+  openLeagueSagaUrl: (url: string) => Promise<void>;
   openUpdateUrl: (url: string) => Promise<void>;
   openProjectUrl: (url: string) => Promise<void>;
   checkForUpdates: () => Promise<UpdateInfo>;

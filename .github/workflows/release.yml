@@ -57,9 +57,9 @@ jobs:
       - run: npm -w apps/desktop run make -- --mac --${{ matrix.arch }}
       - name: Smoke test packaged app and deep link
         run: |
-          executable=$(find apps/desktop/dist -type f -path '*/LeagueLore Import Helper.app/Contents/MacOS/LeagueLore Import' -print -quit)
+          executable=$(find apps/desktop/dist -type f -path '*/LeagueSaga Import Helper.app/Contents/MacOS/LeagueSaga Import' -print -quit)
           test -n "$executable"
-          "$executable" --smoke-test "leaguelore-import://start?apiBase=https%3A%2F%2Fportal.leagueloreapp.com&token=smoke-token&importSessionId=smoke-session&leagueId=424242&season=2025"
+          "$executable" --smoke-test "leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&season=2025&importSessionId=smoke-session"
       - uses: actions/upload-artifact@v7
         with:
           name: macos-${{ matrix.arch }}
@@ -88,7 +88,7 @@ jobs:
       - name: Smoke test packaged app and deep link
         shell: bash
         run: |
-          "apps/desktop/dist/win-unpacked/LeagueLore Import Helper.exe" --smoke-test "leaguelore-import://start?apiBase=https%3A%2F%2Fportal.leagueloreapp.com&token=smoke-token&importSessionId=smoke-session&leagueId=424242&season=2025"
+          "apps/desktop/dist/win-unpacked/LeagueSaga Import Helper.exe" --smoke-test "leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&season=2025&importSessionId=smoke-session"
       - uses: actions/upload-artifact@v7
         with:
           name: windows-x64
@@ -108,7 +108,7 @@ jobs:
       - run: npm -w apps/desktop run make -- --linux --x64
       - name: Smoke test packaged app and deep link
         run: |
-          xvfb-run "apps/desktop/dist/linux-unpacked/leaguelore-import-helper" --smoke-test "leaguelore-import://start?apiBase=https%3A%2F%2Fportal.leagueloreapp.com&token=smoke-token&importSessionId=smoke-session&leagueId=424242&season=2025"
+          xvfb-run "apps/desktop/dist/linux-unpacked/league-saga-import-helper" --smoke-test "leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&season=2025&importSessionId=smoke-session"
       - uses: actions/upload-artifact@v7
         with:
           name: linux-x64
@@ -132,4 +132,4 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" release-artifacts/* SHA256SUMS.txt --verify-tag --generate-notes --title "LeagueLore Import Helper $GITHUB_REF_NAME"
+        run: gh release create "$GITHUB_REF_NAME" release-artifacts/* SHA256SUMS.txt --verify-tag --generate-notes --title "LeagueSaga Import Helper $GITHUB_REF_NAME"

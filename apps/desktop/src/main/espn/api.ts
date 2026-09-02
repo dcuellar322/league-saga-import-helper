@@ -37,7 +37,7 @@ export async function fetchEspnLeaguePayload(params: EspnFetchParams, options: F
         headers: {
           accept: 'application/json',
           cookie: cookieHeader,
-          'user-agent': 'LeagueLore Import Helper/0.1.0'
+          'user-agent': 'LeagueSaga Import Helper/0.1.0'
         },
         signal
       });

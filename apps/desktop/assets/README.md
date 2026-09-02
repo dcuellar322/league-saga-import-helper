@@ -1,6 +1,12 @@
-# Icons
+# LeagueSaga assets
 
-`icon.svg` is the editable source icon and `league-lore-mark.png` is the 1024px packaging source. Electron Builder is configured to derive the platform-specific application icons from the PNG during each native build:
+These files come from the canonical brand kit in the `league-saga` repository:
+
+- `league-saga-app-icon.png` is the 1024 px app-store icon. Electron Builder uses it to derive native application icons.
+- `league-saga-mark.png` is the full-color transparent mark used in the application header.
+- `league-saga-mark-one-color-navy.svg` is the scalable one-color mark for future branded output.
+
+Electron Builder creates these platform-specific application icons:
 
 - `icon.icns` for macOS
 - `icon.ico` for Windows

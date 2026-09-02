@@ -1,4 +1,4 @@
-import type { LeagueLoreImportBundle } from '@leaguelore/import-contract';
+import type { LeagueSagaImportBundle } from '@leaguesaga/import-contract';
 
 export type OptionalImportCategory = 'rosterEntries' | 'matchups' | 'draftPicks' | 'transactions';
 export type IncludedCategories = Record<OptionalImportCategory, boolean>;
@@ -11,9 +11,9 @@ export const DEFAULT_INCLUDED_CATEGORIES: IncludedCategories = {
 };
 
 export function createDeliveryBundle(
-  bundle: LeagueLoreImportBundle,
+  bundle: LeagueSagaImportBundle,
   included: IncludedCategories
-): LeagueLoreImportBundle {
+): LeagueSagaImportBundle {
   const excluded = (Object.entries(included) as Array<[OptionalImportCategory, boolean]>)
     .filter(([, value]) => !value)
     .map(([key]) => key);

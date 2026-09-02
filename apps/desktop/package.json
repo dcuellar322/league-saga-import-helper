@@ -1,8 +1,8 @@
 {
-  "name": "leaguelore-import-helper",
-  "productName": "LeagueLore Import Helper",
+  "name": "league-saga-import-helper",
+  "productName": "LeagueSaga Import Helper",
   "version": "0.1.0",
-  "description": "Secure local ESPN import helper for LeagueLore.",
+  "description": "Secure local ESPN import helper for LeagueSaga.",
   "main": "out/main/main.js",
   "author": "Cuellar Labs LLC",
   "license": "MIT",
@@ -15,10 +15,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "build": {
-    "appId": "app.leaguelore.import-helper",
-    "productName": "LeagueLore Import Helper",
-    "icon": "assets/league-lore-mark.png",
-    "artifactName": "LeagueLoreImportHelper-${version}-${os}-${arch}.${ext}",
+    "appId": "app.leaguesaga.import-helper",
+    "productName": "LeagueSaga Import Helper",
+    "icon": "assets/league-saga-app-icon.png",
+    "artifactName": "LeagueSagaImportHelper-${version}-${os}-${arch}.${ext}",
     "asar": true,
     "afterPack": "scripts/after-pack.cjs",
     "electronFuses": {
@@ -44,9 +44,9 @@
     ],
     "protocols": [
       {
-        "name": "LeagueLore Import",
+        "name": "LeagueSaga Import",
         "schemes": [
-          "leaguelore-import"
+          "leaguesaga-import"
         ]
       }
     ],
@@ -82,11 +82,11 @@
     "publish": {
       "provider": "github",
       "owner": "dcuellar322",
-      "repo": "leaguelore-import-helper"
+      "repo": "league-saga-import-helper"
     }
   },
   "dependencies": {
-    "@leaguelore/import-contract": "file:../../packages/import-contract",
+    "@leaguesaga/import-contract": "file:../../packages/import-contract",
     "electron-squirrel-startup": "^1.0.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

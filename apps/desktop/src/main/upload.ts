@@ -1,7 +1,7 @@
 import { app } from 'electron';
-import { validateImportBundle } from '@leaguelore/import-contract';
+import { validateImportBundle } from '@leaguesaga/import-contract';
 import type { UploadParams, UploadResult } from '../shared/ipc.js';
-import { createUploadParamsSchema, normalizeLeagueLoreNavigationUrl } from './validation.js';
+import { createUploadParamsSchema, normalizeLeagueSagaNavigationUrl } from './validation.js';
 
 export const MAX_IMPORT_BUNDLE_BYTES = 8 * 1024 * 1024;
 
@@ -27,7 +27,7 @@ export async function uploadBundle(params: UploadParams, signal?: AbortSignal): 
       headers: {
         'content-type': 'application/json',
         accept: 'application/json',
-        'x-leaguelore-import-token': parsedParams.importToken
+        'x-leaguesaga-import-token': parsedParams.importToken
       },
       body: requestBody,
       signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(30_000)]) : AbortSignal.timeout(30_000)
@@ -54,7 +54,7 @@ export async function uploadBundle(params: UploadParams, signal?: AbortSignal): 
             : response.status >= 500
               ? 'unavailable'
               : 'rejected',
-      message: response.ok ? 'Bundle uploaded for LeagueLore preview.' : `LeagueLore returned ${response.status}.`,
+      message: response.ok ? 'Bundle uploaded for LeagueSaga preview.' : `LeagueSaga returned ${response.status}.`,
       retryable: response.status === 429 || response.status >= 500,
       continuationUrl,
       response: response.ok ? parsed : undefined
@@ -70,8 +70,8 @@ export async function uploadBundle(params: UploadParams, signal?: AbortSignal): 
       message: canceled
         ? 'Upload canceled.'
         : timeout
-          ? 'LeagueLore took too long to respond.'
-          : 'Unable to reach LeagueLore. Check your connection and retry.',
+          ? 'LeagueSaga took too long to respond.'
+          : 'Unable to reach LeagueSaga. Check your connection and retry.',
       retryable: !canceled
     };
   }
@@ -83,7 +83,7 @@ function findContinuationUrl(response: unknown, allowLocalhost: boolean): string
   const candidate = record.continuationUrl ?? record.previewUrl ?? record.url;
   if (typeof candidate !== 'string') return undefined;
   try {
-    return normalizeLeagueLoreNavigationUrl(candidate, { allowLocalhost });
+    return normalizeLeagueSagaNavigationUrl(candidate, { allowLocalhost });
   } catch {
     return undefined;
   }

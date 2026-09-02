@@ -1,6 +1,6 @@
 # Security Model
 
-The LeagueLore Import Helper is intentionally designed to avoid the most concerning version of this workflow: reading the user's existing browser cookies.
+The LeagueSaga Import Helper is intentionally designed to avoid the most concerning version of this workflow: reading the user's existing browser cookies.
 
 ## What the helper does
 
@@ -8,15 +8,15 @@ The LeagueLore Import Helper is intentionally designed to avoid the most concern
 - Lets the user sign in directly with ESPN.
 - Reads only the cookies created inside the helper's own ESPN session.
 - Uses those cookies locally to request ESPN fantasy data.
-- Converts ESPN responses to the shared LeagueLore import contract.
-- Uploads only the normalized import bundle to LeagueLore.
+- Converts ESPN responses to the shared LeagueSaga import contract.
+- Uploads only the normalized import bundle to LeagueSaga.
 
 ## What the helper does not do
 
 - It does not read Chrome, Safari, Firefox, Edge, Keychain, Credential Manager, or system browser storage.
-- It does not upload raw ESPN cookies to LeagueLore.
+- It does not upload raw ESPN cookies to LeagueSaga.
 - It does not log cookie values.
-- It does not persist short-lived LeagueLore import tokens to the settings file.
+- It does not persist short-lived LeagueSaga import tokens to the settings file.
 - It does not persist ESPN session cookies after the user clicks **Clear ESPN Session**.
 - It does not bypass ESPN authentication.
 
@@ -31,11 +31,11 @@ The app follows the main Electron security recommendations:
 - deny permission requests by default
 - restricted external navigation
 - runtime validation on IPC inputs
-- restricted LeagueLore API upload destinations
+- restricted LeagueSaga API upload destinations
 - restrictive Content Security Policy for the renderer
 - Electron fuses configured for packaged builds
 
-Packaged builds upload only to `https://portal.leagueloreapp.com`. The marketing and apex
+Packaged builds upload only to `https://portal.leaguesaga.com`. The marketing and apex
 hostnames are not accepted as API upload or continuation origins. Localhost is accepted only by
 unpackaged development builds.
 
@@ -46,15 +46,15 @@ Packaged builds disable `RunAsNode`, `NODE_OPTIONS`, CLI inspector arguments, br
 Do not log:
 
 - ESPN cookie values
-- LeagueLore import tokens
+- LeagueSaga import tokens
 - full request headers
 - raw ESPN response payloads unless behind an explicit developer-only flag
 
 The optional diagnostics export contains timestamps, event names, result codes, and aggregate record counts. Its writer rejects fields whose names indicate tokens, cookies, secrets, passwords, headers, payloads, or responses and rotates the local log at 1 MB.
 
-## Data uploaded to LeagueLore
+## Data uploaded to LeagueSaga
 
-The app uploads a `LeagueLoreImportBundle` JSON document. It includes league, team, roster, matchup, draft, and transaction data. It should never include ESPN session cookies or passwords.
+The app uploads a `LeagueSagaImportBundle` JSON document. It includes league, team, roster, matchup, draft, and transaction data. It should never include ESPN session cookies or passwords.
 
 ## Recommended release posture
 
@@ -65,8 +65,8 @@ Before sending to non-technical beta users, treat these items as release blocker
 3. Sign Windows builds.
 4. Publish SHA-256 checksums with each GitHub release.
 5. Run the installed deep-link and production-preview smoke test.
-6. Keep an easy-to-read privacy page linked from both the helper and LeagueLore's import screen.
+6. Keep an easy-to-read privacy page linked from both the helper and LeagueSaga's import screen.
 
 ## Reporting a vulnerability
 
-Do not include credentials, tokens, cookies, or raw ESPN payloads in a report. Submit a private report through [GitHub's private security advisory form](https://github.com/dcuellar322/leaguelore-import-helper/security/advisories/new). If that form is unavailable, contact the repository owner privately through the GitHub profile rather than opening a public issue.
+Do not include credentials, tokens, cookies, or raw ESPN payloads in a report. Submit a private report through [GitHub's private security advisory form](https://github.com/dcuellar322/league-saga-import-helper/security/advisories/new). If that form is unavailable, contact the repository owner privately through the GitHub profile rather than opening a public issue.
