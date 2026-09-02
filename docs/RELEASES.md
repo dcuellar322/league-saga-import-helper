@@ -58,13 +58,13 @@ The release workflow combines all native artifacts, generates `SHA256SUMS.txt`, 
 ## Suggested release naming
 
 ```text
-LeagueSaga Import Helper v0.1.0
+LeagueSaga Import Helper v0.2.0
 
 Assets:
-- LeagueSagaImportHelper-0.1.0-mac-arm64.dmg
-- LeagueSagaImportHelper-0.1.0-mac-x64.dmg
-- LeagueSagaImportHelper-0.1.0-win-x64.exe
-- LeagueSagaImportHelper-0.1.0-linux-x64.AppImage, .deb, or .zip
+- LeagueSagaImportHelper-0.2.0-mac-arm64.dmg
+- LeagueSagaImportHelper-0.2.0-mac-x64.dmg
+- LeagueSagaImportHelper-0.2.0-win-x64.exe
+- LeagueSagaImportHelper-0.2.0-linux-x64.AppImage, .deb, or .zip
 - latest.yml, latest-mac.yml, and latest-linux.yml
 - generated installer and zip .blockmap files
 - SHA256SUMS.txt

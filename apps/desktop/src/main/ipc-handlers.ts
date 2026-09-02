@@ -79,9 +79,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
         history,
         warnings: [
           ...history.warnings,
-          ...history.seasons.flatMap((bundle) =>
-            bundle.metadata.warnings.map((warning) => `${bundle.league.season}: ${warning}`)
-          )
+          ...history.seasons.flatMap((bundle) => bundle.warnings.map((warning) => `${bundle.season}: ${warning}`))
         ]
       };
     } catch (error) {
@@ -111,8 +109,8 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
   });
   handleTrusted(options, 'bundle:save-to-disk', async (input: unknown) => {
     const bundle = validateImportPayload(input);
-    const leagueExternalId = 'kind' in bundle ? bundle.leagueExternalId : bundle.league.externalRef.externalId;
-    const seasonLabel = 'kind' in bundle ? `${bundle.startSeason}-${bundle.endSeason}` : String(bundle.league.season);
+    const leagueExternalId = bundle.leagueExternalId;
+    const seasonLabel = `${bundle.startSeason}-${bundle.endSeason}`;
     const defaultPath = join(app.getPath('documents'), `leaguesaga-import-${seasonLabel}-${leagueExternalId}.json`);
     const result = await dialog.showSaveDialog({
       title: 'Save LeagueSaga Import Package',

@@ -1,4 +1,4 @@
-import { createMockImportBundle, validateImportBundle } from '@leaguesaga/import-contract';
+import { createMockHistoryImport, validateHistoryImport } from '@leaguesaga/import-contract';
 
 const token = process.env.LEAGUESAGA_SMOKE_TOKEN;
 const productionApiBase = 'https://portal.leaguesaga.com';
@@ -7,30 +7,26 @@ const importSessionId = process.env.LEAGUESAGA_SMOKE_SESSION_ID;
 if (!token || !importSessionId) throw new Error('LEAGUESAGA_SMOKE_TOKEN and LEAGUESAGA_SMOKE_SESSION_ID are required.');
 if (apiBase !== productionApiBase) throw new Error(`The production smoke test only permits ${productionApiBase}.`);
 
-const generated = createMockImportBundle();
 const leagueExternalId = `smoke-${Date.now()}`;
-const bundle = validateImportBundle({
+const generated = createMockHistoryImport([new Date().getUTCFullYear()], {
+  leagueExternalId,
+  importSessionId,
+  helperVersion: '0.2.0',
+  platform: process.platform
+});
+const bundle = validateHistoryImport({
   ...generated,
-  metadata: {
-    ...generated.metadata,
-    source: 'espn',
-    importSessionId,
-    warnings: ['Automated sanitized production smoke test.']
-  },
-  league: {
-    ...generated.league,
-    externalRef: { provider: 'espn', externalId: leagueExternalId },
-    name: 'LeagueSaga Release Smoke Test'
-  },
-  teams: generated.teams.map((team) => ({
-    ...team,
-    externalRef: { ...team.externalRef, provider: 'espn' },
-    leagueExternalId
+  provider: 'espn',
+  leagueName: 'LeagueSaga Release Smoke Test',
+  seasons: generated.seasons.map((season) => ({
+    ...season,
+    league: { ...season.league, name: 'LeagueSaga Release Smoke Test' },
+    rosterEntries: [],
+    matchups: [],
+    draftPicks: [],
+    transactions: []
   })),
-  rosterEntries: [],
-  matchups: [],
-  draftPicks: [],
-  transactions: []
+  warnings: ['Automated sanitized production smoke test.']
 });
 
 const response = await fetch(`${apiBase}/api/import-helper/espn/preview`, {

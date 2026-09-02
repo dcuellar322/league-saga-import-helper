@@ -132,7 +132,6 @@ Supported query parameters:
 - `importSessionId`: optional non-secret import session identifier included in package metadata
 - `leagueId`: numeric ESPN league ID
 - `startYear`: optional ESPN season start year, for example `2020`; omit it to import every linked season
-- `season`: legacy alias for `startYear`
 - `apiBase`: optional LeagueSaga API base URL
 
 LeagueSaga should include `startYear` when the user wants to limit imported history. If it is omitted, the helper discovers every linked season reported by ESPN. Manual users can paste a complete ESPN league URL to extract both the ID and its season as the starting year.
@@ -148,7 +147,19 @@ scripts/                  Maintenance scripts
 
 ## Import Contract
 
-The shared `@leaguesaga/import-contract` package defines both the normalized single-season bundle and the atomic historical-import package. Each season is validated independently before it is included. ESPN response shapes can change, so ESPN-specific parsing should stay inside `apps/desktop/src/main/espn/transform.ts` while the shared contract remains stable or is intentionally versioned.
+The shared `@leaguesaga/import-contract` package defines the compact, provider-neutral `0.2.0`
+history package. This is the first public contract version. Each season is validated independently.
+Provider response shapes can change, so provider-specific parsing stays inside its adapter while
+the public contract remains stable or is intentionally versioned.
+
+See [History Import Format](docs/IMPORT_FORMAT.md) for the documented fields, privacy boundary,
+version policy, example document, and generated JSON Schemas.
+
+## Open Source
+
+This repository is the public client and integration boundary. It does not contain LeagueSaga's
+database schema, persistence models, billing rules, or server authorization implementation. See
+[Open-Source Boundary](docs/OPEN_SOURCE.md) for the publication checklist and scope.
 
 ## Security Reports
 

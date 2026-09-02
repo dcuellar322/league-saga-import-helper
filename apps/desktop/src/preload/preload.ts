@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { DeepLinkSettings, HelperSettings, ImportParams, LeagueSagaBridge, UploadParams } from '../shared/ipc.js';
-import type { LeagueSagaImportPayload } from '@leaguesaga/import-contract';
+import type { LeagueSagaHistoryImport } from '@leaguesaga/import-contract';
 
 const bridge: LeagueSagaBridge = {
   appVersion: () => ipcRenderer.invoke('app:version'),
@@ -14,7 +14,7 @@ const bridge: LeagueSagaBridge = {
   importFromEspn: (params: ImportParams) => ipcRenderer.invoke('espn:import', params),
   cancelEspnImport: () => ipcRenderer.invoke('espn:cancel-import'),
   createMockImport: (params: ImportParams) => ipcRenderer.invoke('mock:import', params),
-  saveBundleToDisk: (bundle: LeagueSagaImportPayload) => ipcRenderer.invoke('bundle:save-to-disk', bundle),
+  saveBundleToDisk: (bundle: LeagueSagaHistoryImport) => ipcRenderer.invoke('bundle:save-to-disk', bundle),
   uploadBundle: (params: UploadParams) => ipcRenderer.invoke('bundle:upload', params),
   cancelUpload: () => ipcRenderer.invoke('bundle:cancel-upload'),
   openLeagueSagaUrl: (url: string) => ipcRenderer.invoke('app:open-leaguesaga-url', url),

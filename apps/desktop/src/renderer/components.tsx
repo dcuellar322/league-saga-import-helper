@@ -812,13 +812,13 @@ function HumanReadablePreview({ history }: { history: LeagueSagaHistoryImport })
       </div>
       <div className="preview-sections">
         {history.seasons.map((bundle, index) => (
-          <details key={bundle.league.season} open={index === history.seasons.length - 1}>
+          <details key={bundle.season} open={index === history.seasons.length - 1}>
             <summary>
-              Season {bundle.league.season} <span>{bundle.teams.length} teams</span>
+              Season {bundle.season} <span>{bundle.teams.length} teams</span>
             </summary>
             <ul>
               {bundle.teams.map((team) => (
-                <li key={team.externalRef.externalId}>
+                <li key={team.externalId}>
                   <strong>{team.displayName}</strong>
                   <small>
                     {team.ownerDisplayNames.length

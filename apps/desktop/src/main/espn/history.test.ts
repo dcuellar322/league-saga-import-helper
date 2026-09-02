@@ -1,38 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createMockImportBundle } from '@leaguesaga/import-contract';
+import { createMockHistorySeason } from '@leaguesaga/import-contract';
 import { EspnApiError } from './api.js';
 import { discoverEspnSeasonYears, importEspnHistory, inclusiveSeasonRange } from './history.js';
 
-function bundleForSeason(season: number) {
-  const bundle = createMockImportBundle();
-  const leagueExternalId = '123';
-  return {
-    ...bundle,
-    metadata: { ...bundle.metadata, source: 'espn' as const },
-    league: {
-      ...bundle.league,
-      externalRef: { provider: 'espn' as const, externalId: leagueExternalId },
-      season
-    },
-    teams: bundle.teams.map((team) => ({
-      ...team,
-      externalRef: { ...team.externalRef, provider: 'espn' as const },
-      leagueExternalId
-    })),
-    rosterEntries: bundle.rosterEntries.map((entry) => ({
-      ...entry,
-      player: { ...entry.player, externalRef: { ...entry.player.externalRef, provider: 'espn' as const } }
-    })),
-    matchups: bundle.matchups.map((matchup) => ({
-      ...matchup,
-      externalRef: { ...matchup.externalRef, provider: 'espn' as const, externalId: `${season}-1` },
-      leagueExternalId,
-      season
-    }))
-  };
-}
-
-const transformSeason = (_payload: unknown, context: { season: number }) => bundleForSeason(context.season);
+const transformSeason = (_payload: unknown, context: { season: number }) => createMockHistorySeason(context.season);
 
 describe('ESPN history imports', () => {
   it('discovers linked seasons from common ESPN response locations', () => {
@@ -56,11 +27,11 @@ describe('ESPN history imports', () => {
 
     const history = await importEspnHistory(
       { leagueId: '123' },
-      { currentSeason: 2026, helperVersion: '0.1.0', platform: 'test' },
+      { currentSeason: 2026, helperVersion: '0.2.0', platform: 'test' },
       { fetchSeason, transformSeason }
     );
 
-    expect(history.seasons.map((bundle) => bundle.league.season)).toEqual([2024, 2025, 2026]);
+    expect(history.seasons.map((bundle) => bundle.season)).toEqual([2024, 2025, 2026]);
     expect(fetchSeason.mock.calls.map(([params]) => params.season)).toEqual([2026, 2024, 2025]);
   });
 
@@ -72,11 +43,11 @@ describe('ESPN history imports', () => {
 
     const history = await importEspnHistory(
       { leagueId: '123', startYear: 2024 },
-      { currentSeason: 2026, helperVersion: '0.1.0', platform: 'test' },
+      { currentSeason: 2026, helperVersion: '0.2.0', platform: 'test' },
       { fetchSeason, transformSeason }
     );
 
-    expect(history.seasons.map((bundle) => bundle.league.season)).toEqual([2024, 2026]);
+    expect(history.seasons.map((bundle) => bundle.season)).toEqual([2024, 2026]);
     expect(history.warnings).toContain('ESPN season 2025 was not available and was skipped.');
   });
 
@@ -84,7 +55,7 @@ describe('ESPN history imports', () => {
     await expect(
       importEspnHistory(
         { leagueId: '123', startYear: 2027 },
-        { currentSeason: 2026, helperVersion: '0.1.0', platform: 'test' },
+        { currentSeason: 2026, helperVersion: '0.2.0', platform: 'test' },
         { fetchSeason: vi.fn(), transformSeason }
       )
     ).rejects.toThrow('cannot be later');

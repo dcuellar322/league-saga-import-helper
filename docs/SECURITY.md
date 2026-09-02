@@ -54,7 +54,10 @@ The optional diagnostics export contains timestamps, event names, result codes, 
 
 ## Data uploaded to LeagueSaga
 
-The app uploads a `LeagueSagaImportBundle` JSON document. It includes league, team, roster, matchup, draft, and transaction data. It should never include ESPN session cookies or passwords.
+The app uploads a versioned `LeagueSagaHistoryImport` JSON document. It contains normalized league,
+settings, team, roster, matchup, draft, and transaction data. It does not contain raw provider
+response objects, arbitrary provider settings, ESPN session cookies, or passwords. See
+[History Import Format](IMPORT_FORMAT.md) for the complete public boundary.
 
 ## Recommended release posture
 

@@ -2,7 +2,7 @@ import {
   IMPORT_CONTRACT_VERSION,
   validateHistoryImport,
   type LeagueSagaHistoryImport,
-  type LeagueSagaImportBundle
+  type LeagueSagaHistorySeason
 } from '@leaguesaga/import-contract';
 import { EspnApiError, fetchEspnLeaguePayload } from './api.js';
 import { transformEspnPayload, type TransformContext } from './transform.js';
@@ -57,7 +57,7 @@ export async function importEspnHistory(
     seasonYears = inclusiveSeasonRange(params.startYear, context.currentSeason);
   }
 
-  const bundles: LeagueSagaImportBundle[] = [];
+  const seasons: LeagueSagaHistorySeason[] = [];
   for (const season of seasonYears) {
     if (context.signal?.aborted) throw new Error('Import canceled.');
     try {
@@ -66,12 +66,9 @@ export async function importEspnHistory(
         (await dependencies.fetchSeason({ leagueId: params.leagueId, season }, { signal: context.signal }));
       const transformContext: TransformContext = {
         leagueId: params.leagueId,
-        season,
-        importSessionId: params.importSessionId,
-        helperVersion: context.helperVersion,
-        platform: context.platform
+        season
       };
-      bundles.push(dependencies.transformSeason(payload, transformContext));
+      seasons.push(dependencies.transformSeason(payload, transformContext));
     } catch (error) {
       if (error instanceof EspnApiError && error.code === 'not_found') {
         warnings.push(`ESPN season ${season} was not available and was skipped.`);
@@ -81,25 +78,30 @@ export async function importEspnHistory(
     }
   }
 
-  if (!bundles.length) {
+  if (!seasons.length) {
     throw new Error(
       'ESPN did not return any importable seasons for this league. Confirm the league ID and start year.'
     );
   }
 
-  bundles.sort((left, right) => left.league.season - right.league.season);
-  const latestBundle = bundles.at(-1)!;
+  seasons.sort((left, right) => left.season - right.season);
+  const latestSeason = seasons.at(-1)!;
   return validateHistoryImport({
     kind: 'league-history',
     contractVersion: IMPORT_CONTRACT_VERSION,
     provider: 'espn',
     generatedAt: new Date().toISOString(),
+    helper: {
+      name: 'LeagueSaga Import Helper',
+      version: context.helperVersion,
+      platform: context.platform
+    },
     importSessionId: params.importSessionId,
-    leagueExternalId: latestBundle.league.externalRef.externalId,
-    leagueName: latestBundle.league.name,
-    startSeason: bundles[0]!.league.season,
-    endSeason: latestBundle.league.season,
-    seasons: bundles,
+    leagueExternalId: params.leagueId,
+    leagueName: latestSeason.league.name,
+    startSeason: seasons[0]!.season,
+    endSeason: latestSeason.season,
+    seasons,
     warnings
   });
 }

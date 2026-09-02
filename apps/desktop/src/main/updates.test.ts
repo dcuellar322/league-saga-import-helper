@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const electronApp = vi.hoisted(() => ({ isPackaged: true, getVersion: () => '0.1.0' }));
+const electronApp = vi.hoisted(() => ({ isPackaged: true, getVersion: () => '0.2.0' }));
 vi.mock('electron', () => ({ app: electronApp }));
 
 const updater = vi.hoisted(() => ({
@@ -29,8 +29,8 @@ describe('release update checks', () => {
       vi.fn().mockResolvedValue(
         new Response(
           JSON.stringify({
-            tag_name: 'v0.2.0',
-            html_url: 'https://github.com/dcuellar322/league-saga-import-helper/releases/tag/v0.2.0'
+            tag_name: 'v0.3.0',
+            html_url: 'https://github.com/dcuellar322/league-saga-import-helper/releases/tag/v0.3.0'
           }),
           { status: 200 }
         )
@@ -38,8 +38,8 @@ describe('release update checks', () => {
     );
     await expect(checkForUpdates()).resolves.toMatchObject({
       status: 'available',
-      currentVersion: '0.1.0',
-      latestVersion: '0.2.0'
+      currentVersion: '0.2.0',
+      latestVersion: '0.3.0'
     });
   });
 
@@ -54,11 +54,11 @@ describe('release update checks', () => {
     );
     await expect(checkForUpdates()).resolves.toMatchObject({ status: 'unavailable' });
     electronApp.isPackaged = false;
-    await expect(checkForUpdates()).resolves.toEqual({ status: 'current', currentVersion: '0.1.0' });
+    await expect(checkForUpdates()).resolves.toEqual({ status: 'current', currentVersion: '0.2.0' });
   });
 
   it('downloads a newer signed update through the packaged updater', async () => {
-    updater.checkForUpdates.mockResolvedValue({ updateInfo: { version: '0.2.0' } });
+    updater.checkForUpdates.mockResolvedValue({ updateInfo: { version: '0.3.0' } });
     updater.downloadUpdate.mockResolvedValue(['/tmp/LeagueSagaImportHelper']);
 
     await expect(downloadUpdate()).resolves.toBeUndefined();
@@ -68,7 +68,7 @@ describe('release update checks', () => {
   });
 
   it('refuses updater actions without a newer packaged release', async () => {
-    updater.checkForUpdates.mockResolvedValue({ updateInfo: { version: '0.1.0' } });
+    updater.checkForUpdates.mockResolvedValue({ updateInfo: { version: '0.2.0' } });
     await expect(downloadUpdate()).rejects.toThrow('No newer signed release');
 
     electronApp.isPackaged = false;

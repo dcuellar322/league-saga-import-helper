@@ -1,4 +1,4 @@
-import type { LeagueSagaHistoryImport, LeagueSagaImportPayload } from '@leaguesaga/import-contract';
+import type { LeagueSagaHistoryImport } from '@leaguesaga/import-contract';
 
 export type SessionStatus = {
   isSignedIn: boolean;
@@ -29,7 +29,7 @@ export type ImportParams = {
 export type UploadParams = {
   apiBaseUrl: string;
   importToken: string;
-  bundle: LeagueSagaImportPayload;
+  bundle: LeagueSagaHistoryImport;
 };
 
 export type UploadResult = {
@@ -74,7 +74,7 @@ export type LeagueSagaBridge = {
   importFromEspn: (params: ImportParams) => Promise<ImportResult>;
   cancelEspnImport: () => Promise<void>;
   createMockImport: (params: ImportParams) => Promise<ImportResult>;
-  saveBundleToDisk: (bundle: LeagueSagaImportPayload) => Promise<{ canceled: boolean; filePath?: string }>;
+  saveBundleToDisk: (bundle: LeagueSagaHistoryImport) => Promise<{ canceled: boolean; filePath?: string }>;
   uploadBundle: (params: UploadParams) => Promise<UploadResult>;
   cancelUpload: () => Promise<void>;
   openLeagueSagaUrl: (url: string) => Promise<void>;

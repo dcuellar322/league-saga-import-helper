@@ -120,7 +120,7 @@ export function parseDeepLinkSettings(input: string, options: UrlValidationOptio
     const importSessionId = parsed.searchParams.get('importSessionId');
     const provider = parsed.searchParams.get('provider');
     const leagueId = parsed.searchParams.get('leagueId');
-    const season = parsed.searchParams.get('startYear') ?? parsed.searchParams.get('season');
+    const season = parsed.searchParams.get('startYear');
 
     if (apiBaseUrl) settings.apiBaseUrl = normalizeApiBaseUrl(apiBaseUrl, options);
     if (importToken) settings.importToken = ImportTokenSchema.parse(importToken);
