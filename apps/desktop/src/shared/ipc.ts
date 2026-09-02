@@ -1,4 +1,4 @@
-import type { LeagueSagaImportBundle } from '@leaguesaga/import-contract';
+import type { LeagueSagaHistoryImport, LeagueSagaImportPayload } from '@leaguesaga/import-contract';
 
 export type SessionStatus = {
   isSignedIn: boolean;
@@ -9,10 +9,13 @@ export type SessionStatus = {
   lastCheckedAt: string;
 };
 
+export type ImportSourceProvider = 'espn' | 'yahoo' | 'sleeper';
+
 export type HelperSettings = {
   apiBaseUrl: string;
   importToken: string;
   importSessionId?: string;
+  provider: ImportSourceProvider;
   leagueId: string;
   season?: number;
 };
@@ -26,7 +29,7 @@ export type ImportParams = {
 export type UploadParams = {
   apiBaseUrl: string;
   importToken: string;
-  bundle: LeagueSagaImportBundle;
+  bundle: LeagueSagaImportPayload;
 };
 
 export type UploadResult = {
@@ -40,7 +43,7 @@ export type UploadResult = {
 };
 
 export type ImportResult = {
-  bundle: LeagueSagaImportBundle;
+  history: LeagueSagaHistoryImport;
   warnings: string[];
 };
 
@@ -71,13 +74,15 @@ export type LeagueSagaBridge = {
   importFromEspn: (params: ImportParams) => Promise<ImportResult>;
   cancelEspnImport: () => Promise<void>;
   createMockImport: (params: ImportParams) => Promise<ImportResult>;
-  saveBundleToDisk: (bundle: LeagueSagaImportBundle) => Promise<{ canceled: boolean; filePath?: string }>;
+  saveBundleToDisk: (bundle: LeagueSagaImportPayload) => Promise<{ canceled: boolean; filePath?: string }>;
   uploadBundle: (params: UploadParams) => Promise<UploadResult>;
   cancelUpload: () => Promise<void>;
   openLeagueSagaUrl: (url: string) => Promise<void>;
   openUpdateUrl: (url: string) => Promise<void>;
   openProjectUrl: (url: string) => Promise<void>;
   checkForUpdates: () => Promise<UpdateInfo>;
+  downloadUpdate: () => Promise<void>;
+  installUpdate: () => Promise<void>;
   saveDiagnostics: () => Promise<{ canceled: boolean; filePath?: string }>;
   onDeepLink: (callback: (settings: DeepLinkSettings) => void) => () => void;
 };

@@ -1,0 +1,9 @@
+<svg width="760" height="180" viewBox="0 0 760 180" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">LeagueSaga</title>
+  <desc id="desc">LeagueSaga reverse wordmark with League in white and Saga in blue.</desc>
+  <g transform="translate(24 0) skewX(-7)">
+    <text x="0" y="137" textLength="706" lengthAdjust="spacingAndGlyphs" font-family="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif" font-size="136" letter-spacing="0.5">
+      <tspan fill="#FFFFFF">League</tspan><tspan fill="#4F8BFF">Saga</tspan>
+    </text>
+  </g>
+</svg>

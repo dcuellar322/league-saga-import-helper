@@ -2,7 +2,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
-import { LeagueSagaImportBundleSchema, LeagueSagaImportPreviewSchema } from './schema.js';
+import {
+  LeagueSagaHistoryImportSchema,
+  LeagueSagaImportBundleSchema,
+  LeagueSagaImportPreviewSchema
+} from './schema.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const distDir = join(__dirname, 'json-schema');
@@ -38,5 +42,11 @@ await writeFile(
 await writeFile(
   join(distDir, 'leaguesaga-import-preview.schema.json'),
   JSON.stringify(toNamedJsonSchema(LeagueSagaImportPreviewSchema, 'LeagueSagaImportPreview'), null, 2),
+  'utf-8'
+);
+
+await writeFile(
+  join(distDir, 'leaguesaga-history-import.schema.json'),
+  JSON.stringify(toNamedJsonSchema(LeagueSagaHistoryImportSchema, 'LeagueSagaHistoryImport'), null, 2),
   'utf-8'
 );

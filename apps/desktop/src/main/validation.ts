@@ -4,6 +4,7 @@ import type { HelperSettings } from '../shared/ipc.js';
 const PRODUCTION_API_HOSTS = new Set(['portal.leaguesaga.com']);
 const LOCAL_API_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
 const DEEP_LINK_PROTOCOL = 'leaguesaga-import:';
+const ImportSourceProviderSchema = z.enum(['espn', 'yahoo', 'sleeper']);
 
 type UrlValidationOptions = {
   allowLocalhost: boolean;
@@ -19,6 +20,8 @@ export const EspnLeagueIdSchema = z
   .string()
   .trim()
   .regex(/^\d{1,12}$/, 'ESPN league ID must be numeric.');
+
+const ProviderLeagueIdSchema = z.string().trim().min(1).max(64);
 
 const MockLeagueIdSchema = z
   .string()
@@ -75,6 +78,7 @@ export function createSettingsSchema(options: UrlValidationOptions) {
     apiBaseUrl: z.string().transform((value) => normalizeApiBaseUrl(value, options)),
     importToken: OptionalImportTokenSchema,
     importSessionId: ImportSessionIdSchema,
+    provider: ImportSourceProviderSchema.default('espn'),
     leagueId: z.string().trim().max(64),
     season: OptionalSeasonSchema
   });
@@ -114,13 +118,20 @@ export function parseDeepLinkSettings(input: string, options: UrlValidationOptio
     const apiBaseUrl = parsed.searchParams.get('apiBase');
     const importToken = parsed.searchParams.get('token');
     const importSessionId = parsed.searchParams.get('importSessionId');
+    const provider = parsed.searchParams.get('provider');
     const leagueId = parsed.searchParams.get('leagueId');
-    const season = parsed.searchParams.get('season');
+    const season = parsed.searchParams.get('startYear') ?? parsed.searchParams.get('season');
 
     if (apiBaseUrl) settings.apiBaseUrl = normalizeApiBaseUrl(apiBaseUrl, options);
     if (importToken) settings.importToken = ImportTokenSchema.parse(importToken);
     if (importSessionId) settings.importSessionId = ImportSessionIdSchema.parse(importSessionId);
-    if (leagueId) settings.leagueId = EspnLeagueIdSchema.parse(leagueId);
+    if (provider) settings.provider = ImportSourceProviderSchema.parse(provider);
+    if (leagueId) {
+      settings.leagueId =
+        (settings.provider ?? 'espn') === 'espn'
+          ? EspnLeagueIdSchema.parse(leagueId)
+          : ProviderLeagueIdSchema.parse(leagueId);
+    }
     if (season) settings.season = OptionalSeasonSchema.parse(season);
 
     return settings;

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createMockImportBundle } from '@leaguesaga/import-contract';
+import { createMockHistoryImport, createMockImportBundle } from '@leaguesaga/import-contract';
 
 vi.mock('electron', () => ({ app: { isPackaged: false } }));
 
@@ -28,6 +28,23 @@ describe('LeagueSaga uploads', () => {
       retryable: false,
       continuationUrl: 'http://localhost:15173/imports/preview/1'
     });
+  });
+
+  it('uploads a multi-season history package atomically', async () => {
+    const request = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    vi.stubGlobal('fetch', request);
+    const history = createMockHistoryImport();
+
+    const result = await uploadBundle({
+      apiBaseUrl: 'http://localhost:15173',
+      importToken: 'one-time-token',
+      bundle: history
+    });
+
+    expect(result.ok).toBe(true);
+    const body = JSON.parse(String(request.mock.calls[0]?.[1]?.body));
+    expect(body.kind).toBe('league-history');
+    expect(body.seasons).toHaveLength(3);
   });
 
   it('drops untrusted continuation URLs and classifies expired sessions', async () => {

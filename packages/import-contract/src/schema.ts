@@ -239,6 +239,60 @@ export const LeagueSagaImportBundleSchema = z
     }
   });
 
+export const LeagueSagaHistoryImportSchema = z
+  .object({
+    kind: z.literal('league-history'),
+    contractVersion: z.literal(IMPORT_CONTRACT_VERSION),
+    provider: ImportProviderSchema,
+    generatedAt: z.string().datetime(),
+    importSessionId: z.string().min(1).optional(),
+    leagueExternalId: z.string().min(1),
+    leagueName: z.string().min(1),
+    startSeason: z.number().int().min(2000).max(2100),
+    endSeason: z.number().int().min(2000).max(2100),
+    seasons: z.array(LeagueSagaImportBundleSchema).min(1, 'History import must contain at least one season.'),
+    warnings: z.array(z.string()).default([])
+  })
+  .superRefine((history, ctx) => {
+    const seasonYears = history.seasons.map((bundle) => bundle.league.season);
+    const uniqueSeasonYears = new Set(seasonYears);
+
+    function issue(message: string, path: Array<string | number>) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message, path });
+    }
+
+    if (uniqueSeasonYears.size !== seasonYears.length) {
+      issue('History import contains duplicate seasons.', ['seasons']);
+    }
+    if (seasonYears.some((season, index) => index > 0 && season <= seasonYears[index - 1]!)) {
+      issue('History import seasons must be ordered from oldest to newest.', ['seasons']);
+    }
+    if (history.startSeason !== seasonYears[0]) {
+      issue('History import startSeason must match its oldest season.', ['startSeason']);
+    }
+    if (history.endSeason !== seasonYears.at(-1)) {
+      issue('History import endSeason must match its newest season.', ['endSeason']);
+    }
+
+    for (const [index, bundle] of history.seasons.entries()) {
+      if (bundle.metadata.source !== history.provider || bundle.league.externalRef.provider !== history.provider) {
+        issue('History import provider must match every season bundle.', ['seasons', index]);
+      }
+      if (bundle.league.externalRef.externalId !== history.leagueExternalId) {
+        issue('History import league ID must match every season bundle.', ['seasons', index, 'league', 'externalRef']);
+      }
+      if (
+        history.importSessionId !== undefined &&
+        bundle.metadata.importSessionId !== undefined &&
+        bundle.metadata.importSessionId !== history.importSessionId
+      ) {
+        issue('History import session ID must match every season bundle.', ['seasons', index, 'metadata']);
+      }
+    }
+  });
+
+export const LeagueSagaImportPayloadSchema = z.union([LeagueSagaImportBundleSchema, LeagueSagaHistoryImportSchema]);
+
 export const LeagueSagaImportPreviewSchema = z.object({
   importSessionId: z.string().min(1),
   contractVersion: z.literal(IMPORT_CONTRACT_VERSION),
@@ -257,6 +311,8 @@ export const LeagueSagaImportPreviewSchema = z.object({
 export type ImportProvider = z.infer<typeof ImportProviderSchema>;
 export type ExternalRef = z.infer<typeof ExternalRefSchema>;
 export type LeagueSagaImportBundle = z.infer<typeof LeagueSagaImportBundleSchema>;
+export type LeagueSagaHistoryImport = z.infer<typeof LeagueSagaHistoryImportSchema>;
+export type LeagueSagaImportPayload = z.infer<typeof LeagueSagaImportPayloadSchema>;
 export type LeagueSagaImportPreview = z.infer<typeof LeagueSagaImportPreviewSchema>;
 export type LeagueSagaImportTeam = z.infer<typeof TeamSchema>;
 export type LeagueSagaImportPlayer = z.infer<typeof PlayerSchema>;

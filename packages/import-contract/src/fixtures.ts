@@ -1,5 +1,5 @@
 import { IMPORT_CONTRACT_VERSION } from './version.js';
-import type { LeagueSagaImportBundle } from './schema.js';
+import type { LeagueSagaHistoryImport, LeagueSagaImportBundle } from './schema.js';
 
 export function createMockImportBundle(overrides: Partial<LeagueSagaImportBundle> = {}): LeagueSagaImportBundle {
   const now = new Date().toISOString();
@@ -72,4 +72,58 @@ export function createMockImportBundle(overrides: Partial<LeagueSagaImportBundle
   };
 
   return { ...bundle, ...overrides };
+}
+
+export function createMockHistoryImport(
+  seasonYears = [2024, 2025, 2026],
+  options: {
+    leagueExternalId?: string;
+    importSessionId?: string;
+    helperVersion?: string;
+    platform?: string;
+  } = {}
+): LeagueSagaHistoryImport {
+  const leagueExternalId = options.leagueExternalId ?? 'mock-league-history';
+  const seasons = seasonYears.map((season) => {
+    const bundle = createMockImportBundle();
+    return {
+      ...bundle,
+      metadata: {
+        ...bundle.metadata,
+        generatedAt: new Date().toISOString(),
+        importSessionId: options.importSessionId,
+        helper: {
+          ...bundle.metadata.helper,
+          version: options.helperVersion ?? bundle.metadata.helper.version,
+          platform: options.platform ?? bundle.metadata.helper.platform
+        }
+      },
+      league: {
+        ...bundle.league,
+        externalRef: { ...bundle.league.externalRef, externalId: leagueExternalId },
+        season
+      },
+      teams: bundle.teams.map((team) => ({ ...team, leagueExternalId })),
+      matchups: bundle.matchups.map((matchup) => ({
+        ...matchup,
+        externalRef: { ...matchup.externalRef, externalId: `${season}-${matchup.externalRef.externalId}` },
+        leagueExternalId,
+        season
+      }))
+    };
+  });
+
+  return {
+    kind: 'league-history',
+    contractVersion: IMPORT_CONTRACT_VERSION,
+    provider: 'mock',
+    generatedAt: new Date().toISOString(),
+    importSessionId: options.importSessionId,
+    leagueExternalId,
+    leagueName: 'LeagueSaga Demo League',
+    startSeason: seasonYears[0]!,
+    endSeason: seasonYears.at(-1)!,
+    seasons,
+    warnings: ['Mock historical import for local development.']
+  };
 }

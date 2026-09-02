@@ -31,6 +31,7 @@ describe('helper settings persistence', () => {
       apiBaseUrl: 'http://localhost:15173',
       importToken: '',
       importSessionId: undefined,
+      provider: 'espn',
       leagueId: ''
     });
   });
@@ -40,18 +41,20 @@ describe('helper settings persistence', () => {
       apiBaseUrl: 'http://localhost:15173/',
       importToken: 'one-time-secret',
       importSessionId: 'session-secret',
+      provider: 'espn',
       leagueId: ' 12345 ',
       season: 2025
     });
     expect(saved).toMatchObject({ leagueId: '12345', importToken: 'one-time-secret', season: 2025 });
 
     const path = join(userData, 'settings.json');
-    expect(JSON.parse(await readFile(path, 'utf-8'))).toEqual({ leagueId: '12345', season: 2025 });
+    expect(JSON.parse(await readFile(path, 'utf-8'))).toEqual({ provider: 'espn', leagueId: '12345', season: 2025 });
     expect((await stat(path)).mode & 0o777).toBe(0o600);
 
     await expect(readSettings()).resolves.toMatchObject({
       apiBaseUrl: 'http://localhost:15173',
       importToken: '',
+      provider: 'espn',
       leagueId: '12345',
       season: 2025
     });
@@ -65,6 +68,7 @@ describe('helper settings persistence', () => {
     await expect(readSettings()).resolves.toMatchObject({
       apiBaseUrl: 'http://127.0.0.1:15173/api',
       importToken: 'environment-token',
+      provider: 'espn',
       leagueId: ''
     });
   });

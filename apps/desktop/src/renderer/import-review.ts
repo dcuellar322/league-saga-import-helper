@@ -1,4 +1,4 @@
-import type { LeagueSagaImportBundle } from '@leaguesaga/import-contract';
+import type { LeagueSagaHistoryImport, LeagueSagaImportBundle } from '@leaguesaga/import-contract';
 
 export type OptionalImportCategory = 'rosterEntries' | 'matchups' | 'draftPicks' | 'transactions';
 export type IncludedCategories = Record<OptionalImportCategory, boolean>;
@@ -30,5 +30,15 @@ export function createDeliveryBundle(
     matchups: included.matchups ? bundle.matchups : [],
     draftPicks: included.draftPicks ? bundle.draftPicks : [],
     transactions: included.transactions ? bundle.transactions : []
+  };
+}
+
+export function createDeliveryHistory(
+  history: LeagueSagaHistoryImport,
+  included: IncludedCategories
+): LeagueSagaHistoryImport {
+  return {
+    ...history,
+    seasons: history.seasons.map((bundle) => createDeliveryBundle(bundle, included))
   };
 }

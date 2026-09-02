@@ -51,6 +51,23 @@ describe('URL and deep-link validation', () => {
     });
   });
 
+  it('preserves provider context for future non-ESPN deep links', () => {
+    expect(
+      parseDeepLinkSettings('leaguesaga-import://start?provider=sleeper&leagueId=123456789012345678', {
+        allowLocalhost: false
+      })
+    ).toEqual({ provider: 'sleeper', leagueId: '123456789012345678' });
+  });
+
+  it('accepts startYear and keeps the legacy season deep-link parameter compatible', () => {
+    expect(
+      parseDeepLinkSettings('leaguesaga-import://start?leagueId=123&startYear=2019', { allowLocalhost: false })
+    ).toEqual({ leagueId: '123', season: 2019 });
+    expect(
+      parseDeepLinkSettings('leaguesaga-import://start?leagueId=123&season=2020', { allowLocalhost: false })
+    ).toEqual({ leagueId: '123', season: 2020 });
+  });
+
   it('restricts LeagueSaga continuation URLs', () => {
     expect(
       normalizeLeagueSagaNavigationUrl('https://portal.leaguesaga.com/imports/preview?id=1', {
@@ -92,6 +109,7 @@ describe('URL and deep-link validation', () => {
     const settings = createSettingsSchema({ allowLocalhost: true }).parse({
       apiBaseUrl: 'http://localhost:15173/api/',
       importToken: '',
+      provider: 'espn',
       leagueId: ' 123 ',
       season: ''
     });
@@ -99,6 +117,7 @@ describe('URL and deep-link validation', () => {
     expect(settings).toEqual({
       apiBaseUrl: 'http://localhost:15173/api',
       importToken: '',
+      provider: 'espn',
       leagueId: '123',
       season: undefined
     });

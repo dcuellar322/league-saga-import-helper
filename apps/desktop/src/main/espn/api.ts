@@ -7,6 +7,18 @@ export type EspnFetchParams = {
 
 type FetchOptions = { signal?: AbortSignal };
 
+export type EspnApiErrorCode = 'auth' | 'not_found' | 'rate_limited' | 'unavailable' | 'rejected';
+
+export class EspnApiError extends Error {
+  constructor(
+    readonly code: EspnApiErrorCode,
+    message: string
+  ) {
+    super(message);
+    this.name = 'EspnApiError';
+  }
+}
+
 const DEFAULT_VIEWS = [
   'mSettings',
   'mTeam',
@@ -47,10 +59,10 @@ export async function fetchEspnLeaguePayload(params: EspnFetchParams, options: F
         await retryDelay(attempt, options.signal);
         continue;
       }
-      throw new Error(espnStatusMessage(response.status));
+      throw espnStatusError(response.status);
     } catch (error) {
       if (options.signal?.aborted) throw new Error('Import canceled.');
-      if (error instanceof Error && error.message.startsWith('ESPN ')) throw error;
+      if (error instanceof EspnApiError) throw error;
       if (attempt < 2) {
         await retryDelay(attempt, options.signal);
         continue;
@@ -62,13 +74,18 @@ export async function fetchEspnLeaguePayload(params: EspnFetchParams, options: F
   throw new Error('Unable to reach ESPN.');
 }
 
-function espnStatusMessage(status: number): string {
+function espnStatusError(status: number): EspnApiError {
   if (status === 401 || status === 403)
-    return 'ESPN sign-in expired or this account cannot access the league. Sign in again and retry.';
-  if (status === 404) return 'ESPN could not find that league and season. Confirm both values and retry.';
-  if (status === 429) return 'ESPN is temporarily rate limiting imports. Wait a moment and retry.';
-  if (status >= 500) return 'ESPN is temporarily unavailable. Try again shortly.';
-  return `ESPN rejected the import request (${status}).`;
+    return new EspnApiError(
+      'auth',
+      'ESPN sign-in expired or this account cannot access the league. Sign in again and retry.'
+    );
+  if (status === 404)
+    return new EspnApiError('not_found', 'ESPN could not find that league and season. Confirm both values and retry.');
+  if (status === 429)
+    return new EspnApiError('rate_limited', 'ESPN is temporarily rate limiting imports. Wait a moment and retry.');
+  if (status >= 500) return new EspnApiError('unavailable', 'ESPN is temporarily unavailable. Try again shortly.');
+  return new EspnApiError('rejected', `ESPN rejected the import request (${status}).`);
 }
 
 async function retryDelay(attempt: number, signal?: AbortSignal): Promise<void> {

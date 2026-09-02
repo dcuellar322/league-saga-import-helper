@@ -2,17 +2,16 @@ import { app, dialog, ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { platform } from 'node:process';
-import { createMockImportBundle, validateImportBundle } from '@leaguesaga/import-contract';
+import { createMockHistoryImport, validateImportPayload } from '@leaguesaga/import-contract';
 import type { DeepLinkSettings, HelperSettings, ImportParams, UploadParams } from '../shared/ipc.js';
 import { currentSeasonYear, defaultLeagueSagaApiBaseUrl } from '../shared/environment.js';
 import { clearEspnSession, getEspnSessionStatus } from './espn/cookies.js';
 import { closeEspnLoginWindow, openEspnLoginWindow } from './espn/login-window.js';
-import { fetchEspnLeaguePayload } from './espn/api.js';
-import { transformEspnPayload } from './espn/transform.js';
+import { importEspnHistory, inclusiveSeasonRange } from './espn/history.js';
 import { exportDiagnostics, recordDiagnostic } from './diagnostics.js';
 import { openTrustedLeagueSagaUrl, openTrustedProjectUrl, openTrustedUpdateUrl } from './security.js';
 import { readSettings, saveSettings } from './settings.js';
-import { checkForUpdates } from './updates.js';
+import { checkForUpdates, downloadUpdate, installUpdate } from './updates.js';
 import { uploadBundle } from './upload.js';
 import { EspnImportParamsSchema, EspnOpenLoginParamsSchema, MockImportParamsSchema } from './validation.js';
 
@@ -45,34 +44,46 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
   });
   handleTrusted(options, 'espn:import', async (params: ImportParams) => {
     const parsedParams = EspnImportParamsSchema.parse(params);
-    const season = parsedParams.season ?? currentSeasonYear();
+    const currentSeason = currentSeasonYear();
     activeEspnImport?.abort();
     const controller = new AbortController();
     activeEspnImport = controller;
     closeEspnLoginWindow();
     await recordDiagnostic('espn_import_started', {
-      season,
+      startYear: parsedParams.season,
+      currentSeason,
       hasImportSessionId: Boolean(parsedParams.importSessionId)
     });
     try {
-      const payload = await fetchEspnLeaguePayload(
-        { leagueId: parsedParams.leagueId, season },
-        { signal: controller.signal }
+      const history = await importEspnHistory(
+        {
+          leagueId: parsedParams.leagueId,
+          startYear: parsedParams.season,
+          importSessionId: parsedParams.importSessionId
+        },
+        {
+          currentSeason,
+          helperVersion: app.getVersion(),
+          platform,
+          signal: controller.signal
+        }
       );
-      const bundle = transformEspnPayload(payload, {
-        leagueId: parsedParams.leagueId,
-        season,
-        importSessionId: parsedParams.importSessionId,
-        helperVersion: app.getVersion(),
-        platform
-      });
       await recordDiagnostic('espn_import_completed', {
-        teams: bundle.teams.length,
-        rosters: bundle.rosterEntries.length,
-        matchups: bundle.matchups.length,
-        warnings: bundle.metadata.warnings.length
+        seasons: history.seasons.length,
+        teams: history.seasons.reduce((total, bundle) => total + bundle.teams.length, 0),
+        rosters: history.seasons.reduce((total, bundle) => total + bundle.rosterEntries.length, 0),
+        matchups: history.seasons.reduce((total, bundle) => total + bundle.matchups.length, 0),
+        warnings: history.warnings.length
       });
-      return { bundle, warnings: bundle.metadata.warnings };
+      return {
+        history,
+        warnings: [
+          ...history.warnings,
+          ...history.seasons.flatMap((bundle) =>
+            bundle.metadata.warnings.map((warning) => `${bundle.league.season}: ${warning}`)
+          )
+        ]
+      };
     } catch (error) {
       await recordDiagnostic('espn_import_failed', {
         reason:
@@ -88,39 +99,23 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
   });
   handleTrusted(options, 'mock:import', (params: ImportParams) => {
     const parsedParams = MockImportParamsSchema.parse(params);
-    const season = parsedParams.season ?? currentSeasonYear();
-    const bundle = createMockImportBundle({
-      metadata: {
-        contractVersion: '0.1.0',
-        source: 'mock',
-        generatedAt: new Date().toISOString(),
-        helper: {
-          name: 'LeagueSaga Import Helper',
-          version: app.getVersion(),
-          platform
-        },
-        importSessionId: parsedParams.importSessionId,
-        warnings: ['Mock import generated locally. No ESPN request was made.']
-      },
-      league: {
-        externalRef: { provider: 'mock', externalId: parsedParams.leagueId },
-        name: 'LeagueSaga Demo League',
-        season,
-        size: 2,
-        visibility: 'private',
-        settings: { mode: 'mock' }
-      }
+    const currentSeason = currentSeasonYear();
+    const firstSeason = parsedParams.season ?? Math.max(2000, currentSeason - 2);
+    const history = createMockHistoryImport(inclusiveSeasonRange(firstSeason, currentSeason), {
+      leagueExternalId: parsedParams.leagueId,
+      importSessionId: parsedParams.importSessionId,
+      helperVersion: app.getVersion(),
+      platform
     });
-    return { bundle, warnings: bundle.metadata.warnings };
+    return { history, warnings: history.warnings };
   });
   handleTrusted(options, 'bundle:save-to-disk', async (input: unknown) => {
-    const bundle = validateImportBundle(input);
-    const defaultPath = join(
-      app.getPath('documents'),
-      `leaguesaga-import-${bundle.league.season}-${bundle.league.externalRef.externalId}.json`
-    );
+    const bundle = validateImportPayload(input);
+    const leagueExternalId = 'kind' in bundle ? bundle.leagueExternalId : bundle.league.externalRef.externalId;
+    const seasonLabel = 'kind' in bundle ? `${bundle.startSeason}-${bundle.endSeason}` : String(bundle.league.season);
+    const defaultPath = join(app.getPath('documents'), `leaguesaga-import-${seasonLabel}-${leagueExternalId}.json`);
     const result = await dialog.showSaveDialog({
-      title: 'Save LeagueSaga Import Bundle',
+      title: 'Save LeagueSaga Import Package',
       defaultPath,
       filters: [{ name: 'JSON', extensions: ['json'] }]
     });
@@ -152,6 +147,8 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
   handleTrusted(options, 'app:open-update-url', (url: string) => openTrustedUpdateUrl(url));
   handleTrusted(options, 'app:open-project-url', (url: string) => openTrustedProjectUrl(url));
   handleTrusted(options, 'app:check-for-updates', () => checkForUpdates());
+  handleTrusted(options, 'app:download-update', () => downloadUpdate());
+  handleTrusted(options, 'app:install-update', () => installUpdate());
   handleTrusted(options, 'diagnostics:save', async () => {
     const result = await dialog.showSaveDialog({
       title: 'Save privacy-safe diagnostics',

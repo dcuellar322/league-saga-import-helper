@@ -36,7 +36,12 @@ describe('preload bridge', () => {
     await bridge.runtimeConfig();
     await bridge.rendererReady();
     await bridge.getSettings();
-    await bridge.saveSettings({ apiBaseUrl: 'http://localhost:15173', importToken: '', leagueId: '123' });
+    await bridge.saveSettings({
+      apiBaseUrl: 'http://localhost:15173',
+      importToken: '',
+      provider: 'espn',
+      leagueId: '123'
+    });
     await bridge.openEspnLogin({ leagueId: '123', season: 2025 });
     await bridge.getEspnSessionStatus();
     await bridge.clearEspnSession();
@@ -50,6 +55,8 @@ describe('preload bridge', () => {
     await bridge.openUpdateUrl('https://github.com/dcuellar322/league-saga-import-helper/releases/1');
     await bridge.openProjectUrl('https://github.com/dcuellar322/league-saga-import-helper/');
     await bridge.checkForUpdates();
+    await bridge.downloadUpdate();
+    await bridge.installUpdate();
     await bridge.saveDiagnostics();
 
     expect(electron.ipcRenderer.invoke.mock.calls.map(([channel]) => channel)).toEqual([
@@ -71,6 +78,8 @@ describe('preload bridge', () => {
       'app:open-update-url',
       'app:open-project-url',
       'app:check-for-updates',
+      'app:download-update',
+      'app:install-update',
       'diagnostics:save'
     ]);
   });

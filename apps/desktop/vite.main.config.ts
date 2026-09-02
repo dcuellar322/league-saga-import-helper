@@ -10,7 +10,7 @@ export default defineConfig({
     },
     outDir: 'out/main',
     rollupOptions: {
-      external: [/^node:/, 'electron', 'electron-squirrel-startup']
+      external: [/^node:/, 'electron', 'electron-squirrel-startup', 'electron-updater']
     },
     sourcemap: true,
     target: 'es2022'

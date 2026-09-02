@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { createMockImportBundle } from './fixtures';
-import { safeValidateImportBundle, validateImportBundle } from './validate';
+import { createMockHistoryImport, createMockImportBundle } from './fixtures';
+import {
+  safeValidateHistoryImport,
+  safeValidateImportBundle,
+  validateHistoryImport,
+  validateImportBundle,
+  validateImportPayload
+} from './validate';
 
 describe('LeagueSaga import contract', () => {
   it('validates the bundled mock import fixture', () => {
@@ -68,5 +74,25 @@ describe('LeagueSaga import contract', () => {
       expect(messages).toContain('Matchup winner missing-team is not a matchup participant.');
       expect(messages).toContain('Transaction item references unknown team missing-team.');
     }
+  });
+
+  it('validates an ordered multi-season history package', () => {
+    const history = validateHistoryImport(createMockHistoryImport());
+
+    expect(history.seasons.map((bundle) => bundle.league.season)).toEqual([2024, 2025, 2026]);
+    expect(validateImportPayload(history)).toEqual(history);
+    expect(validateImportPayload(history.seasons[0])).toEqual(history.seasons[0]);
+  });
+
+  it('rejects duplicate, unordered, and mismatched history seasons', () => {
+    const duplicate = createMockHistoryImport([2025, 2025]);
+    const mismatch = createMockHistoryImport([2024, 2025]);
+    mismatch.leagueExternalId = 'different-league';
+
+    const duplicateResult = safeValidateHistoryImport(duplicate);
+    const mismatchResult = safeValidateHistoryImport(mismatch);
+
+    expect(duplicateResult.success).toBe(false);
+    expect(mismatchResult.success).toBe(false);
   });
 });

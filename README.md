@@ -1,35 +1,39 @@
 # LeagueSaga Import Helper
 
-LeagueSaga Import Helper is an open source desktop app for importing ESPN fantasy football league
-data into LeagueSaga without asking users to paste ESPN cookies into a web form.
+LeagueSaga Import Helper is an open source, provider-aware desktop app for importing fantasy football
+league data into LeagueSaga without asking users to paste credentials into a web form. The current
+release includes the production ESPN adapter; Yahoo and Sleeper are represented in the flow as
+upcoming adapters.
 
 Cuellar Labs LLC operates LeagueSaga and distributes the Import Helper.
 
 The app opens ESPN in an isolated Electron session, lets the user sign in directly with ESPN,
-fetches fantasy league data locally, converts it into a validated LeagueSaga import bundle, and
-uploads only the reviewed fantasy data to LeagueSaga.
+fetches fantasy league history locally, converts every season into a validated LeagueSaga history
+package, and uploads only the reviewed fantasy data to LeagueSaga.
 
 This project is independent. It is not affiliated with, endorsed by, sponsored by, or approved by
 ESPN, Disney, or the NFL. Your use of ESPN remains subject to ESPN's and Disney's terms.
 
 ## Features
 
+- Choose ESPN, Yahoo, or Sleeper in a provider-aware five-step flow; ESPN is available today.
 - Sign in to ESPN inside a dedicated helper app session.
 - Keep ESPN passwords and raw session cookies local to the helper.
 - Validate import data against a shared TypeScript/Zod contract.
-- Export the generated JSON bundle before uploading.
+- Discover and import every ESPN season linked to a league, or limit history with an optional start year.
+- Export the generated historical JSON package before uploading.
 - Review teams and owners in human-readable form and include or exclude rosters, matchups, draft picks, and transactions.
-- Upload a validated bundle to a LeagueSaga preview endpoint.
+- Upload a validated historical package to a LeagueSaga preview endpoint.
 - Return directly to the LeagueSaga preview after a successful upload when the API supplies a continuation URL.
 - Clear the helper's ESPN session from inside the app.
-- Save a rotating privacy-safe diagnostic log and check for signed releases.
+- Save a rotating privacy-safe diagnostic log and download signed app updates from Settings.
 
 ## Privacy and Security
 
 - The helper does not read Chrome, Safari, Firefox, or system browser cookie stores.
 - The helper does not upload raw ESPN cookies to LeagueSaga.
 - ESPN cookies are used locally only to request fantasy data from ESPN.
-- Import bundles can include league, team, roster, matchup, draft, and transaction data returned by ESPN.
+- Historical import packages can include league, team, roster, matchup, draft, and transaction data returned by ESPN for every discovered season.
 
 See [docs/PRIVACY.md](docs/PRIVACY.md), [docs/SECURITY.md](docs/SECURITY.md), and
 [docs/THIRD-PARTY-SERVICES.md](docs/THIRD-PARTY-SERVICES.md) for more detail.
@@ -119,18 +123,19 @@ The tag release workflow refuses to publish without signing credentials and prod
 LeagueSaga can prefill an import session by opening the app with the registered custom protocol:
 
 ```text
-leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=<one-time-import-token>&leagueId=<espn-league-id>&season=2025&importSessionId=<session-id>
+leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=<one-time-import-token>&leagueId=<espn-league-id>&startYear=2020&importSessionId=<session-id>
 ```
 
 Supported query parameters:
 
 - `token`: short-lived, one-time LeagueSaga import token
-- `importSessionId`: optional non-secret import session identifier included in bundle metadata
+- `importSessionId`: optional non-secret import session identifier included in package metadata
 - `leagueId`: numeric ESPN league ID
-- `season`: optional ESPN season start year, for example `2025`
+- `startYear`: optional ESPN season start year, for example `2020`; omit it to import every linked season
+- `season`: legacy alias for `startYear`
 - `apiBase`: optional LeagueSaga API base URL
 
-LeagueSaga should include `season` whenever the import flow has a season start year. If it is omitted, the helper uses the prior year before June and the current year from June onward. Manual users can paste a complete ESPN league URL to extract both the ID and season.
+LeagueSaga should include `startYear` when the user wants to limit imported history. If it is omitted, the helper discovers every linked season reported by ESPN. Manual users can paste a complete ESPN league URL to extract both the ID and its season as the starting year.
 
 ## Repository Layout
 
@@ -143,7 +148,7 @@ scripts/                  Maintenance scripts
 
 ## Import Contract
 
-The shared `@leaguesaga/import-contract` package defines the normalized import bundle schema. ESPN response shapes can change, so ESPN-specific parsing should stay inside `apps/desktop/src/main/espn/transform.ts` while the shared contract remains stable or is intentionally versioned.
+The shared `@leaguesaga/import-contract` package defines both the normalized single-season bundle and the atomic historical-import package. Each season is validated independently before it is included. ESPN response shapes can change, so ESPN-specific parsing should stay inside `apps/desktop/src/main/espn/transform.ts` while the shared contract remains stable or is intentionally versioned.
 
 ## Security Reports
 

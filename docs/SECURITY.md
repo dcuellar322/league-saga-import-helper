@@ -9,7 +9,7 @@ The LeagueSaga Import Helper is intentionally designed to avoid the most concern
 - Reads only the cookies created inside the helper's own ESPN session.
 - Uses those cookies locally to request ESPN fantasy data.
 - Converts ESPN responses to the shared LeagueSaga import contract.
-- Uploads only the normalized import bundle to LeagueSaga.
+- Uploads only the normalized, reviewed historical import package to LeagueSaga.
 
 ## What the helper does not do
 

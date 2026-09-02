@@ -29,13 +29,13 @@ operating-system-backed cookie encryption. Closing the helper ends its non-persi
 You can also select **Clear ESPN Session** to remove its ESPN cookies and local session storage.
 
 Short-lived LeagueSaga import tokens authorize an upload. The helper does not save these tokens in
-its settings file. Packaged builds send reviewed bundles only to
+its settings file. Packaged builds send reviewed history packages only to
 `https://portal.leaguesaga.com`.
 
 ## What you can send to LeagueSaga
 
-Only the fantasy-football import bundle that you review is sent to LeagueSaga. That bundle can
-include the league name, season, team names, owner display identifiers and names from ESPN,
+Only the fantasy-football history package that you review is sent to LeagueSaga. Each season is
+validated separately, and the package can include the league name, season, team names, owner display identifiers and names from ESPN,
 rosters, matchups, draft picks, and transaction history.
 
 League and team records are required. Before upload, you can exclude rosters, matchups, draft

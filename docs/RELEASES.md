@@ -11,6 +11,10 @@ npm run make
 
 Artifacts will be generated under `apps/desktop/dist/`.
 
+The GitHub release must include Electron Builder's `latest*.yml` update metadata and any generated
+`.blockmap` files alongside the installers. The in-app Settings updater depends on those files to
+select, verify, download, and install the correct signed artifact.
+
 Before non-technical beta users receive builds, macOS and Windows artifacts must be signed,
 macOS artifacts must be notarized, and each GitHub release must include SHA-256 checksums.
 Treat missing signing/notarization or missing checksums as release blockers for beta and public
@@ -61,6 +65,8 @@ Assets:
 - LeagueSagaImportHelper-0.1.0-mac-x64.dmg
 - LeagueSagaImportHelper-0.1.0-win-x64.exe
 - LeagueSagaImportHelper-0.1.0-linux-x64.AppImage, .deb, or .zip
+- latest.yml, latest-mac.yml, and latest-linux.yml
+- generated installer and zip .blockmap files
 - SHA256SUMS.txt
 ```
 
@@ -74,6 +80,7 @@ Before announcing a release:
 3. Complete a sanitized end-to-end preview against the production API.
 4. Verify macOS notarization with `xcrun stapler validate` and Windows signatures with `Get-AuthenticodeSignature`.
 5. Confirm the packaged fuse report disables Node injection/inspection and enforces encrypted cookies and ASAR integrity.
+6. From the prior packaged version, use Settings to download the new release and confirm the app restarts on the new version.
 
 The manually dispatched **Production upload smoke test** workflow requires approval through the `production-smoke` GitHub environment plus a newly issued one-time `LEAGUESAGA_SMOKE_TOKEN` and `LEAGUESAGA_SMOKE_SESSION_ID`. It uploads a sanitized minimal ESPN-shaped bundle, prints only the HTTP status, and rejects continuation URLs outside LeagueSaga. Run it before promoting a public release; the preview it creates can then be deleted through the normal LeagueSaga flow.
 
