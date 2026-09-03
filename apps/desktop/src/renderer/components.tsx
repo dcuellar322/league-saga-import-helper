@@ -135,6 +135,7 @@ export function ProviderStep({
               key={provider.id}
               onClick={() => onSelect(provider.id)}
               aria-pressed={selectedProvider === provider.id}
+              disabled={!available}
             >
               <span className="provider-mark">{provider.mark}</span>
               <span className="provider-copy">

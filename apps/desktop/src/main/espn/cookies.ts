@@ -19,16 +19,12 @@ export async function getEspnSessionStatus(): Promise<SessionStatus> {
   const cookies = await getEspnSession().cookies.get({});
   const espnCookies = cookies.filter((cookie) => isEspnCookieDomain(cookie.domain ?? ''));
 
-  const domains = Array.from(new Set(espnCookies.flatMap((cookie) => (cookie.domain ? [cookie.domain] : [])))).sort();
   const cookieNames = new Set(espnCookies.map((cookie) => cookie.name));
 
   return {
     isSignedIn: cookieNames.has('SWID') && cookieNames.has('espn_s2'),
     hasSwid: cookieNames.has('SWID'),
-    hasEspnS2: cookieNames.has('espn_s2'),
-    cookieCount: espnCookies.length,
-    domains,
-    lastCheckedAt: new Date().toISOString()
+    hasEspnS2: cookieNames.has('espn_s2')
   };
 }
 

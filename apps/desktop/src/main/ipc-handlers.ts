@@ -27,7 +27,6 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
   handleTrusted(options, 'app:version', () => app.getVersion());
   handleTrusted(options, 'app:runtime-config', () => ({
     apiBaseUrl: process.env.LEAGUESAGA_API_BASE ?? defaultLeagueSagaApiBaseUrl(app.isPackaged),
-    isDevelopment: !app.isPackaged,
     mockImportsEnabled: !app.isPackaged
   }));
   handleTrusted(options, 'app:renderer-ready', options.onRendererReady);
@@ -173,10 +172,7 @@ function handleTrusted<Args extends unknown[]>(
   });
 }
 
-export function assertTrustedIpcSender(
-  event: IpcMainInvokeEvent,
-  isTrustedRendererUrl: (url: string) => boolean
-): void {
+function assertTrustedIpcSender(event: IpcMainInvokeEvent, isTrustedRendererUrl: (url: string) => boolean): void {
   const frameUrl = event.senderFrame?.url ?? event.sender.getURL();
   if (!isTrustedRendererUrl(frameUrl)) {
     throw new Error('Rejected IPC call from an untrusted renderer.');

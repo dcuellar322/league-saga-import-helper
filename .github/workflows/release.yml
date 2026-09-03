@@ -56,7 +56,7 @@ jobs:
         run: |
           executable=$(find apps/desktop/dist -type f -path '*/LeagueSaga Import Helper.app/Contents/MacOS/LeagueSaga Import' -print -quit)
           test -n "$executable"
-          "$executable" --smoke-test "leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&season=2025&importSessionId=smoke-session"
+          "$executable" --smoke-test "leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&startYear=2025&importSessionId=smoke-session"
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: macos
@@ -87,7 +87,7 @@ jobs:
       - name: Smoke test packaged app and deep link
         shell: bash
         run: |
-          "apps/desktop/dist/win-unpacked/LeagueSaga Import Helper.exe" --smoke-test "leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&season=2025&importSessionId=smoke-session"
+          "apps/desktop/dist/win-unpacked/LeagueSaga Import Helper.exe" --smoke-test "leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&startYear=2025&importSessionId=smoke-session"
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: windows-x64
@@ -110,7 +110,7 @@ jobs:
       - run: npm -w apps/desktop run make -- --linux --x64
       - name: Smoke test packaged app and deep link
         run: |
-          xvfb-run "apps/desktop/dist/linux-unpacked/league-saga-import-helper" --smoke-test "leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&season=2025&importSessionId=smoke-session"
+          xvfb-run "apps/desktop/dist/linux-unpacked/league-saga-import-helper" --smoke-test "leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&startYear=2025&importSessionId=smoke-session"
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: linux-x64

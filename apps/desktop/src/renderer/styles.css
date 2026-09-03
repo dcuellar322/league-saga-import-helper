@@ -189,41 +189,6 @@ input:focus {
   background: #f7dfa6;
   box-shadow: 0 0 0 3px rgba(247, 223, 166, 0.12);
 }
-.header-tools {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-}
-.header-action {
-  min-height: 36px;
-  padding: 0.45rem 0.65rem;
-  border-color: transparent;
-  background: transparent;
-  color: var(--subtle);
-  font-size: 0.7rem;
-}
-.secure-badge {
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.48rem;
-  color: var(--muted);
-  font-size: 0.82rem;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.045);
-  border-radius: 999px;
-  padding: 0.55rem 0.78rem;
-}
-.secure-badge .icon {
-  color: var(--green-400);
-}
-.secure-badge.update {
-  color: #f7dfa6;
-  border-color: rgba(245, 241, 232, 0.35);
-  background: rgba(245, 241, 232, 0.08);
-}
-
 .intro {
   display: flex;
   align-items: end;
@@ -748,11 +713,6 @@ input:focus {
   color: var(--muted);
   font-size: 0.8rem;
   line-height: 1.55;
-}
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
 }
 .field > span {
   display: block;
@@ -1475,22 +1435,8 @@ pre {
   .app-header {
     align-items: flex-start;
   }
-  .header-tools {
-    align-items: flex-end;
-    flex-direction: column-reverse;
-  }
   .settings-button span:not(.update-dot) {
     display: none;
-  }
-  .header-action {
-    display: none;
-  }
-  .secure-badge {
-    font-size: 0;
-  }
-  .secure-badge .icon {
-    width: 18px;
-    height: 18px;
   }
   .intro h2 {
     font-size: 1.8rem;
@@ -1498,7 +1444,6 @@ pre {
   .steps nav {
     grid-template-columns: repeat(2, 1fr);
   }
-  .form-grid,
   .provider-grid,
   .instruction-row,
   .credential-checks,

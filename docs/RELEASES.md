@@ -76,7 +76,8 @@ Before announcing a release:
 
 1. Install each native artifact on a clean supported OS.
 2. Launch with a `leaguesaga-import://start` link containing the canonical portal
-   API base and confirm league, season, session ID, and token handoff.
+   API base and confirm league, start season, session ID, and token-presence handoff. The packaged
+   smoke test performs these assertions on every release platform.
 3. Complete a sanitized end-to-end preview against the production API.
 4. Verify macOS notarization with `xcrun stapler validate` and Windows signatures with `Get-AuthenticodeSignature`.
 5. Confirm the packaged fuse report disables Node injection/inspection and enforces encrypted cookies and ASAR integrity.

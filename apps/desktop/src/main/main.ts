@@ -91,18 +91,70 @@ async function createWindow(): Promise<void> {
 }
 
 async function runPackagedSmokeTest(window: BrowserWindow): Promise<void> {
+  const deepLink = findDeepLinkArg(process.argv);
+  const expected = deepLink ? parseDeepLinkSettings(deepLink, { allowLocalhost: false }) : null;
+  if (
+    !expected?.apiBaseUrl ||
+    !expected.importToken ||
+    !expected.importSessionId ||
+    !expected.leagueId ||
+    !expected.season
+  ) {
+    throw new Error('Packaged smoke test requires a complete production deep link.');
+  }
+  const expectedRendererState = JSON.stringify({
+    apiBaseUrl: expected.apiBaseUrl,
+    hasImportToken: true,
+    importSessionId: expected.importSessionId,
+    leagueId: expected.leagueId,
+    season: String(expected.season)
+  });
   const rendered = (await window.webContents.executeJavaScript(`(async () => {
+    const expected = ${expectedRendererState};
     const deadline = Date.now() + 5000;
-    while (Date.now() < deadline && !Array.from(document.querySelectorAll('input')).some((input) => input.value === '424242')) {
+    let state;
+    while (Date.now() < deadline) {
+      const root = document.querySelector('main.shell');
+      const inputValues = Array.from(document.querySelectorAll('input')).map((input) => input.value);
+      state = {
+        hasBridge: Boolean(window.leagueSaga),
+        hasHeading: document.body.textContent.includes('League details'),
+        apiBaseUrl: root?.dataset.apiBaseUrl,
+        hasImportToken: root?.dataset.importTokenPresent === 'true',
+        importSessionId: root?.dataset.importSessionId,
+        leagueId: inputValues.find((value) => value === expected.leagueId),
+        season: inputValues.find((value) => value === expected.season)
+      };
+      if (
+        state.hasBridge &&
+        state.hasHeading &&
+        state.apiBaseUrl === expected.apiBaseUrl &&
+        state.hasImportToken === expected.hasImportToken &&
+        state.importSessionId === expected.importSessionId &&
+        state.leagueId === expected.leagueId &&
+        state.season === expected.season
+      ) break;
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
-    return {
-      hasBridge: Boolean(window.leagueSaga),
-      hasHeading: document.body.textContent.includes('League details'),
-      hasDeepLinkLeague: Array.from(document.querySelectorAll('input')).some((input) => input.value === '424242')
-    };
-  })()`)) as { hasBridge: boolean; hasHeading: boolean; hasDeepLinkLeague: boolean };
-  if (!rendered.hasBridge || !rendered.hasHeading || !rendered.hasDeepLinkLeague) {
+    return state;
+  })()`)) as {
+    hasBridge: boolean;
+    hasHeading: boolean;
+    apiBaseUrl?: string;
+    hasImportToken: boolean;
+    importSessionId?: string;
+    leagueId?: string;
+    season?: string;
+  };
+  if (
+    !rendered.hasBridge ||
+    !rendered.hasHeading ||
+    rendered.apiBaseUrl !== expected.apiBaseUrl ||
+    !rendered.hasImportToken ||
+    rendered.importSessionId !== expected.importSessionId ||
+    rendered.leagueId !== expected.leagueId ||
+    rendered.season !== String(expected.season)
+  ) {
     throw new Error(`Packaged smoke test failed: ${JSON.stringify(rendered)}`);
   }
   process.stdout.write('PACKAGED_SMOKE_OK\n');

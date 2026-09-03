@@ -46,9 +46,7 @@ describe('isolated ESPN cookie session', () => {
     await expect(getEspnSessionStatus()).resolves.toMatchObject({
       isSignedIn: true,
       hasSwid: true,
-      hasEspnS2: true,
-      cookieCount: 3,
-      domains: ['.disney.com', '.espn.com', 'secure.espn.com']
+      hasEspnS2: true
     });
   });
 

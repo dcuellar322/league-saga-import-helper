@@ -189,8 +189,9 @@ not become a LeagueSaga internal identifier.
 
 The schema does not permit credentials, cookies, authorization headers, provider response
 fragments, arbitrary provider settings, LeagueSaga account data, billing data, database table
-names, or LeagueSaga internal IDs. The helper also scans the completed package for sensitive
-material before upload.
+names, or LeagueSaga internal IDs. Before saving or uploading, the helper also rejects nested
+credential-like field names and known ESPN cookie or bearer-token string patterns, even when an
+unknown field would otherwise be removed during schema parsing.
 
 Owner display names, team names, player information, scores, and league history can still be
 personal or private league information. Users must review the package and have authority to import

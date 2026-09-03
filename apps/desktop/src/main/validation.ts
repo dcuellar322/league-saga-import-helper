@@ -10,13 +10,13 @@ type UrlValidationOptions = {
   allowLocalhost: boolean;
 };
 
-export const SeasonSchema = z.coerce.number().int().min(2000).max(2100);
-export const OptionalSeasonSchema = z.preprocess((value) => {
+const SeasonSchema = z.coerce.number().int().min(2000).max(2100);
+const OptionalSeasonSchema = z.preprocess((value) => {
   if (value === undefined || value === null || value === '') return undefined;
   return value;
 }, SeasonSchema.optional());
 
-export const EspnLeagueIdSchema = z
+const EspnLeagueIdSchema = z
   .string()
   .trim()
   .regex(/^\d{1,12}$/, 'ESPN league ID must be numeric.');

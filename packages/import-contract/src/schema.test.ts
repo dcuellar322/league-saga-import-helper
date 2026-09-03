@@ -3,6 +3,7 @@ import { createMockHistoryImport, createMockHistorySeason } from './fixtures';
 import { LeagueSagaHistorySeasonSchema } from './schema';
 import {
   safeValidateHistoryImport,
+  safeValidateImportPayload,
   safeValidateHistorySeason,
   validateHistoryImport,
   validateHistorySeason,
@@ -103,6 +104,18 @@ describe('LeagueSaga import contract', () => {
 
   it('rejects a bare history season as an upload payload', () => {
     expect(() => validateImportPayload(createMockHistorySeason())).toThrow();
+  });
+
+  it('rejects credential-like material before unknown fields can be stripped', () => {
+    const withCookie = {
+      ...createMockHistoryImport(),
+      providerMetadata: { espn_s2: 'private-session-value' }
+    };
+    const withAuthorizationHeader = createMockHistoryImport();
+    withAuthorizationHeader.warnings = ['authorization: Bearer private-token'];
+
+    expect(() => validateImportPayload(withCookie)).toThrow('credential-like material');
+    expect(safeValidateImportPayload(withAuthorizationHeader).success).toBe(false);
   });
 
   it('rejects duplicate, unordered, and mismatched history seasons', () => {

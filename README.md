@@ -16,7 +16,7 @@ ESPN, Disney, or the NFL. Your use of ESPN remains subject to ESPN's and Disney'
 
 ## Features
 
-- Choose ESPN, Yahoo, or Sleeper in a provider-aware five-step flow; ESPN is available today.
+- Import from ESPN in a five-step flow; Yahoo and Sleeper are visible as disabled upcoming providers.
 - Sign in to ESPN inside a dedicated helper app session.
 - Keep ESPN passwords and raw session cookies local to the helper.
 - Validate import data against a shared TypeScript/Zod contract.
@@ -80,9 +80,9 @@ Run tests with the coverage gate:
 npm run test:coverage
 ```
 
-The unit coverage gate includes the deterministic import, validation, security, settings, cookie-session,
-diagnostics, and renderer-helper modules. Electron lifecycle and React rendering entry points are validated
-through packaged smoke tests rather than counted as unit-covered code.
+The coverage gate includes the deterministic import, validation, security, settings, cookie-session,
+diagnostics, IPC, React wizard, workflow reducer, and renderer lifecycle modules. Thin Electron and React
+bootstrap entry points are validated through packaged smoke tests rather than counted as unit-covered code.
 
 Run linting and formatting checks:
 

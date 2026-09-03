@@ -1,5 +1,5 @@
-export const LEAGUESAGA_DEV_API_BASE_URL = 'http://localhost:15173';
-export const LEAGUESAGA_PRODUCTION_API_BASE_URL = 'https://portal.leaguesaga.com';
+const LEAGUESAGA_DEV_API_BASE_URL = 'http://localhost:15173';
+const LEAGUESAGA_PRODUCTION_API_BASE_URL = 'https://portal.leaguesaga.com';
 
 export function defaultLeagueSagaApiBaseUrl(isPackaged: boolean): string {
   return isPackaged ? LEAGUESAGA_PRODUCTION_API_BASE_URL : LEAGUESAGA_DEV_API_BASE_URL;

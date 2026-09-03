@@ -7,8 +7,8 @@
   "author": "Cuellar Labs LLC",
   "license": "MIT",
   "scripts": {
-    "dev": "concurrently -k \"vite --config vite.renderer.config.ts\" \"vite build --config vite.main.config.ts --watch\" \"vite build --config vite.preload.config.ts --watch\" \"wait-on out/main/main.js out/preload/preload.js http://127.0.0.1:5173 && cross-env ELECTRON_RENDERER_URL=http://127.0.0.1:5173 electron .\"",
-    "build": "vite build --config vite.main.config.ts && vite build --config vite.preload.config.ts && vite build --config vite.renderer.config.ts",
+    "dev": "concurrently -k \"vite --config vite.renderer.config.mts\" \"vite build --config vite.main.config.mts --watch\" \"vite build --config vite.preload.config.mts --watch\" \"wait-on out/main/main.js out/preload/preload.js http://127.0.0.1:5173 && cross-env ELECTRON_RENDERER_URL=http://127.0.0.1:5173 electron .\"",
+    "build": "vite build --config vite.main.config.mts && vite build --config vite.preload.config.mts && vite build --config vite.renderer.config.mts",
     "package": "npm run build && electron-builder --dir",
     "make": "npm run build && electron-builder",
     "publish": "npm run build && electron-builder --publish always",

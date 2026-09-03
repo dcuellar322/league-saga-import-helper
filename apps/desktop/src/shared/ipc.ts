@@ -4,9 +4,6 @@ export type SessionStatus = {
   isSignedIn: boolean;
   hasSwid: boolean;
   hasEspnS2: boolean;
-  cookieCount: number;
-  domains: string[];
-  lastCheckedAt: string;
 };
 
 export type ImportSourceProvider = 'espn' | 'yahoo' | 'sleeper';
@@ -42,14 +39,13 @@ export type UploadResult = {
   response?: unknown;
 };
 
-export type ImportResult = {
+type ImportResult = {
   history: LeagueSagaHistoryImport;
   warnings: string[];
 };
 
 export type RuntimeConfig = {
   apiBaseUrl: string;
-  isDevelopment: boolean;
   mockImportsEnabled: boolean;
 };
 

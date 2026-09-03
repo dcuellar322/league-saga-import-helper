@@ -31,6 +31,7 @@ The app follows the main Electron security recommendations:
 - deny permission requests by default
 - restricted external navigation
 - runtime validation on IPC inputs
+- credential-like field and known cookie/header pattern checks on completed import packages
 - restricted LeagueSaga API upload destinations
 - restrictive Content Security Policy for the renderer
 - Electron fuses configured for packaged builds

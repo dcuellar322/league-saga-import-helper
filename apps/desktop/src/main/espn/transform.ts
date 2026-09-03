@@ -624,7 +624,7 @@ function maybeUrl(input: string | undefined): string | undefined {
   }
 }
 
-export function normalizeLeagueSettings(input: Record<string, unknown>): NormalizedLeagueSettings {
+function normalizeLeagueSettings(input: Record<string, unknown>): NormalizedLeagueSettings {
   const scheduleSettings = asRecord(input.scheduleSettings);
   const rosterSettings = asRecord(input.rosterSettings);
   const scoringSettings = asRecord(input.scoringSettings);
