@@ -50,7 +50,9 @@ jobs:
           done
           test -s "LeagueSagaImportHelper-$version-linux-x86_64.AppImage"
           test -s "LeagueSagaImportHelper-$version-linux-amd64.deb"
+          test -s "LeagueSagaImportHelper-$version-linux-x86_64.rpm"
           grep -Fq "LeagueSagaImportHelper-$version-linux-x86_64.AppImage" latest-linux.yml
           grep -Fq "LeagueSagaImportHelper-$version-linux-amd64.deb" latest-linux.yml
+          grep -Fq "LeagueSagaImportHelper-$version-linux-x86_64.rpm" latest-linux.yml
       - name: Publish verified release
         run: gh release edit "$RELEASE_TAG" --draft=false --latest

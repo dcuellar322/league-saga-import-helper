@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
-# Run as a regular user on an Ubuntu desktop/CI runner with sudo available.
+# Run as a regular user on a supported Debian/Ubuntu or Fedora system with sudo.
 set -euo pipefail
 artifacts=$(realpath "${1:?Usage: verify-linux.sh ARTIFACT_DIRECTORY}")
-sudo apt-get update -qq
-sudo apt-get install -y xvfb dbus-x11 desktop-file-utils python3-yaml libglib2.0-bin xdg-utils
+# shellcheck disable=SC1091
+. /etc/os-release
+case "$ID" in
+  ubuntu|debian)
+    sudo apt-get update -qq
+    sudo apt-get install -y --no-install-recommends xvfb xauth dbus-x11 desktop-file-utils python3-yaml libglib2.0-bin xdg-utils
+    ;;
+  fedora)
+    sudo dnf install -y xorg-x11-server-Xvfb xorg-x11-xauth dbus-daemon desktop-file-utils python3-pyyaml glib2 xdg-utils
+    ;;
+  *) echo "Unsupported verification distribution: $ID" >&2; exit 1 ;;
+esac
 
 # Validate every updater payload against its published SHA-512 and size.
 python3 - "$artifacts" <<'PY'
@@ -24,16 +34,25 @@ for entry in metadata['files']:
     digest = base64.b64encode(hashlib.sha512(payload.read_bytes()).digest()).decode()
     assert digest == entry['sha512'], f'Incorrect update checksum: {name}'
     seen.add(payload.suffix)
-assert {'.AppImage', '.deb'} <= seen, 'Both Linux update formats are required'
+assert {'.AppImage', '.deb', '.rpm'} <= seen, 'All three Linux update formats are required'
 PY
 
 shopt -s nullglob
-debs=("$artifacts"/*-linux-amd64.deb)
 images=("$artifacts"/*-linux-x86_64.AppImage)
-test "${#debs[@]}" = 1
 test "${#images[@]}" = 1
-test "$(dpkg-deb --field "${debs[0]}" Architecture)" = amd64
-sudo apt-get install -y "${debs[0]}"
+if [[ "$ID" == fedora ]]; then
+  packages=("$artifacts"/*-linux-x86_64.rpm)
+  test "${#packages[@]}" = 1
+  test "$(rpm -qp --queryformat '%{ARCH}' "${packages[0]}")" = x86_64
+  sudo dnf install -y "${packages[0]}"
+  test "$(cat "/opt/LeagueSaga Import Helper/resources/package-type")" = rpm
+else
+  packages=("$artifacts"/*-linux-amd64.deb)
+  test "${#packages[@]}" = 1
+  test "$(dpkg-deb --field "${packages[0]}" Architecture)" = amd64
+  sudo apt-get install -y "${packages[0]}"
+  test "$(cat "/opt/LeagueSaga Import Helper/resources/package-type")" = deb
+fi
 desktop=/usr/share/applications/league-saga-import-helper.desktop
 desktop-file-validate "$desktop"
 grep -Fq 'x-scheme-handler/leaguesaga-import' "$desktop"
@@ -51,21 +70,19 @@ link='leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&toke
 # shellcheck disable=SC2016
 timeout 70s dbus-run-session -- xvfb-run -a bash -c '
   set -euo pipefail
-  gio launch "$1/helper-smoke.desktop" "$2" > "$1/deb.log" 2>&1
+  gio launch "$1/helper-smoke.desktop" "$2" > "$1/installed.log" 2>&1
   for attempt in $(seq 1 60); do
-    if grep -q PACKAGED_SMOKE_OK "$1/deb.log"; then exit 0; fi
+    if grep -q PACKAGED_SMOKE_OK "$1/installed.log"; then exit 0; fi
     sleep 1
   done
-  cat "$1/deb.log"
+  cat "$1/installed.log"
   exit 1
 ' bash "$work" "$link"
-cat "$work/deb.log"
-grep -q PACKAGED_SMOKE_OK "$work/deb.log"
+cat "$work/installed.log"
+grep -q PACKAGED_SMOKE_OK "$work/installed.log"
 
 # Ubuntu 24.04 restricts user namespaces for uninstalled AppImages. Recommend the .deb there.
-# shellcheck disable=SC1091
-. /etc/os-release
-if [[ "$VERSION_ID" == 22.04 ]]; then
+if [[ "$ID" != ubuntu || "$VERSION_ID" == 22.04 ]]; then
   cp "${images[0]}" "$work/helper.AppImage"
   chmod +x "$work/helper.AppImage"
   if ! timeout 60s dbus-run-session -- xvfb-run -a "$work/helper.AppImage" --appimage-extract-and-run --smoke-test "$link" > "$work/appimage.log" 2>&1; then

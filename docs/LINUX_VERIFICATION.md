@@ -4,11 +4,16 @@
 
 ### Packaged application
 
-- Built the Linux x64 AppImage and Debian installer from the current working tree.
+- Built the Linux x64 AppImage, Debian installer, and RPM installer from the working tree.
 - Installed and launched the Debian package in isolated Ubuntu 22.04 and 24.04 containers.
-- Launched the AppImage in Ubuntu 22.04 with extraction enabled instead of FUSE.
+- Installed and launched the Debian package on Debian 12 and 13, and the RPM on Fedora 44,
+  in isolated x64 containers. Confirmed each installed package selects its matching updater type.
+- Launched the AppImage on Ubuntu 22.04, Debian 12/13, and Fedora 44 with extraction enabled
+  instead of FUSE.
 - Checked desktop entry validation, protocol registration, synthetic deep-link delivery to the
-  packaged renderer, and SHA-512/size consistency for both updater payloads.
+  packaged renderer, and SHA-512/size consistency for all three updater payloads.
+- The added Debian 12/13 and Fedora 44 checks used the same container bootstrap and verification
+  scripts now required by the release workflow. All three completed successfully.
 - Kept Electron's sandbox enabled. Docker supplied namespace capabilities for the test containers;
   these checks do not reproduce every host desktop's security policy or display environment.
 
@@ -50,3 +55,5 @@ The test packages must not be published as official releases.
 
 - Verify delivery and updates between two published Linux releases through GitHub.
 - Verify Debian's interactive administrator prompt on a normal Linux desktop.
+- Exercise an RPM version-to-version update, including its desktop administrator prompt.
+  The Fedora checks above verify installation, launch, and updater selection, not an upgrade.

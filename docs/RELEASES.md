@@ -151,7 +151,7 @@ The **Notarization status** workflow can read Apple's submission history without
 
 ## Linux releases
 
-Linux x64 builds produce an AppImage and a `.deb`; no ZIP is published because it does not provide
+Linux x64 builds produce an AppImage, a `.deb`, and an `.rpm`; no ZIP is published because it does not provide
 installation or desktop integration. Build on Ubuntu 22.04 to preserve the supported baseline.
 `verify-linux` installs the `.deb` on Ubuntu 22.04 and 24.04, validates the desktop protocol entry,
 launches that entry with synthetic import details, and checks every updater payload's size and
@@ -161,10 +161,17 @@ No check disables Electron's sandbox. See [Linux installation](LINUX.md).
 Manual `platforms=linux` runs independently of Apple and Windows signing. `desktop` builds Mac and
 Linux; `macos` builds only Mac; `all` includes Windows. A branch run produces Actions artifacts;
 a tag run stages a draft. Automatic publication is limited to tag pushes and requires successful
-Mac and Linux verification, matching production-preview evidence, and both Linux packages in
+Mac and Linux verification, matching production-preview evidence, and all three Linux packages in
 `latest-linux.yml`, in addition to the existing Mac assets and checksums.
 
 Before announcing Linux support, test ESPN sign-in, review, upload, clearing the session, and browser
 launch links on a Linux desktop, both with the helper closed and already open. Test Settings updates
 from an older installed version for both package formats. The CI smoke tests use synthetic launch
 parameters and do not authenticate to ESPN or prove an upgrade between two published versions.
+
+The `verify-linux-distros` job also installs and launches the packages in Debian 12, Debian 13,
+and Fedora 44 containers. It checks native package architecture, the installed updater package type,
+desktop URL registration, the packaged renderer, AppImage startup, and updater hashes. Release
+publication requires these jobs to pass. Containers use namespace capabilities for Electron's
+sandbox; they do not disable the app sandbox or represent every host security policy. Distribution
+versions in the matrix are explicit and should be reviewed when a supported release reaches end of life.

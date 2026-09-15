@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Fedora x64 RPM installer and Debian 12/13 package verification, including distro release gates.
+
 - Linux x64 AppImage and Debian installers, independent Linux builds, and installed-package checks on Ubuntu.
 - Linux assets and updater metadata checks in the desktop release publication gate.
 
