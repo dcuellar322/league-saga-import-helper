@@ -1,7 +1,7 @@
 {
   "name": "league-saga-import-helper",
   "productName": "LeagueSaga Import Helper",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Secure local fantasy league import helper for LeagueSaga.",
   "main": "out/main/main.js",
   "author": "Cuellar Labs LLC",

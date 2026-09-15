@@ -53,7 +53,8 @@ After building:
 find apps/desktop/dist -maxdepth 5 -type f -print0 | xargs -0 shasum -a 256 > SHA256SUMS.txt
 ```
 
-The release workflow combines all native artifacts, generates `SHA256SUMS.txt`, and creates the GitHub Release. It also checks that the tag, root package, desktop package, contract package, and source contract versions match.
+The release workflow combines all native artifacts, generates `SHA256SUMS.txt`, and creates the GitHub Release. It checks that the tag, root package, and desktop package versions match, and separately checks
+that the contract package matches its source version. App-only patch releases preserve the import contract.
 
 ## Suggested release naming
 

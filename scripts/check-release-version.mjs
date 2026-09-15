@@ -16,9 +16,7 @@ const sourceVersion = contractVersionSource.match(/IMPORT_CONTRACT_VERSION\s*=\s
 
 const versions = {
   root: rootPackage.version,
-  desktop: desktopPackage.version,
-  contractPackage: contractPackage.version,
-  contractSource: sourceVersion
+  desktop: desktopPackage.version
 };
 const mismatches = Object.entries(versions).filter(([, version]) => version !== tag);
 if (mismatches.length) {
@@ -26,4 +24,7 @@ if (mismatches.length) {
     `Release tag ${tag} does not match: ${mismatches.map(([name, version]) => `${name}=${version}`).join(', ')}`
   );
 }
-console.log(`Release versions match ${tag}.`);
+if (contractPackage.version !== sourceVersion) {
+  throw new Error('Contract package and source versions must match.');
+}
+console.log(`Release versions match ${tag}; import contract remains ${sourceVersion}.`);

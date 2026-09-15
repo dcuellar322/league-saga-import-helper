@@ -11,7 +11,7 @@ const leagueExternalId = '424242';
 const generated = createMockHistoryImport([new Date().getUTCFullYear()], {
   leagueExternalId,
   importSessionId,
-  helperVersion: '0.3.0',
+  helperVersion: '0.3.1',
   platform: process.platform
 });
 const bundle = validateHistoryImport({
