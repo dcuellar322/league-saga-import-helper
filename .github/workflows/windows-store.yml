@@ -5,6 +5,11 @@ on:
   push:
     branches: [master]
   workflow_dispatch:
+    inputs:
+      vm_test:
+        description: Also create a self-signed package for a disposable Windows VM
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -48,4 +53,14 @@ jobs:
           path: |
             apps/desktop/dist-store/*.msix
             apps/desktop/dist-store/SHA256SUMS.txt
+          if-no-files-found: error
+      - name: Sign and verify disposable VM test package
+        if: github.event_name == 'workflow_dispatch' && inputs.vm_test
+        run: ./scripts/sign-msix-test.ps1
+      - uses: actions/upload-artifact@v7.0.1
+        if: github.event_name == 'workflow_dispatch' && inputs.vm_test
+        with:
+          name: windows-vm-test-x64
+          path: apps/desktop/dist-store/vm-test/*
+          retention-days: 14
           if-no-files-found: error

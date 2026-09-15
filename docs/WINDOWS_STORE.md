@@ -57,6 +57,13 @@ package `1.3.2.0`, and app `1.0.0` maps to package `2.0.0.0`. This stable mappin
 prohibition on major zero and leaves the fourth component reserved for the Store. App and import
 contract versions remain independent. Each submission with changed binaries needs a new app version.
 
+## Local Windows VM testing
+
+For a disposable Windows VM, dispatch the workflow with `vm_test` enabled. It also produces a
+separate `windows-vm-test-x64` artifact. Follow [Windows VM testing](WINDOWS_VM_TEST.md) to install
+the public test certificate and signed MSIX. The signing key is not exported. This does not replace
+Microsoft Store certification or Store installation/update verification.
+
 ## Submission and verification
 
 Upload the `.msix` to Partner Center, complete the listing, privacy policy, support information,

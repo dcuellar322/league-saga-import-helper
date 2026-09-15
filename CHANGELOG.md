@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Optional self-signed Windows VM test bundles with a public certificate, verified signature, and installation guide.
+
 - Unsigned Windows x64 MSIX submission packages with Store identity validation, protocol registration, and Windows packaging checks.
 
 ### Changed
