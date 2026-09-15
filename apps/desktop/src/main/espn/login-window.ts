@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron';
-import { getEspnSession } from './cookies.js';
-import { hardenWindow, isAllowedEspnAuthUrl } from '../security.js';
+import { ESPN_SESSION_PARTITION, getEspnSession } from './cookies.js';
+import { hardenWindow } from '../security.js';
 import { currentSeasonYear } from '../../shared/environment.js';
 
 type OpenEspnLoginParams = {
@@ -31,7 +31,7 @@ export async function openEspnLoginWindow(params: OpenEspnLoginParams): Promise<
     show: false,
     backgroundColor: '#07152c',
     webPreferences: {
-      partition: 'leaguesaga-espn-import',
+      partition: ESPN_SESSION_PARTITION,
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
@@ -46,12 +46,6 @@ export async function openEspnLoginWindow(params: OpenEspnLoginParams): Promise<
   loginWindow.once('ready-to-show', () => loginWindow?.show());
   loginWindow.on('closed', () => {
     loginWindow = null;
-  });
-
-  loginWindow.webContents.on('will-navigate', (event, url) => {
-    if (!isAllowedEspnAuthUrl(url)) {
-      event.preventDefault();
-    }
   });
 
   const target = buildFantasyUrl(params);

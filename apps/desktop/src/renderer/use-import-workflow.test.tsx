@@ -93,6 +93,49 @@ describe('useImportWorkflow', () => {
     expect(unsubscribe).toHaveBeenCalledOnce();
   });
 
+  it('cancels and ignores an import from the previous deep-link session', async () => {
+    let receiveDeepLink: ((settings: DeepLinkSettings) => void) | undefined;
+    let finishImport: ((value: Awaited<ReturnType<LeagueSagaBridge['importFromEspn']>>) => void) | undefined;
+    const bridge = createBridge({
+      onDeepLink: vi.fn((callback) => {
+        receiveDeepLink = callback;
+        return () => undefined;
+      }),
+      importFromEspn: vi.fn(
+        () =>
+          new Promise<Awaited<ReturnType<LeagueSagaBridge['importFromEspn']>>>((resolve) => {
+            finishImport = resolve;
+          })
+      )
+    });
+    setBridge(bridge);
+    const { result } = renderHook(() => useImportWorkflow());
+    await waitFor(() => expect(result.current.settings.leagueId).toBe('424242'));
+
+    act(() => void result.current.importEspn());
+    await waitFor(() => expect(result.current.busyAction).toBe('importing'));
+    act(() =>
+      receiveDeepLink?.({
+        apiBaseUrl: 'https://portal.leaguesaga.com',
+        importToken: 'new-token',
+        importSessionId: 'new-session',
+        leagueId: '999'
+      })
+    );
+
+    expect(bridge.cancelEspnImport).toHaveBeenCalledOnce();
+    expect(result.current.busyAction).toBeNull();
+    expect(result.current.history).toBeNull();
+    await act(async () => finishImport?.({ history: createMockHistoryImport([2025]), warnings: [] }));
+    expect(result.current.history).toBeNull();
+    expect(result.current.step).toBe('details');
+    expect(result.current.settings).toMatchObject({
+      leagueId: '999',
+      importToken: 'new-token',
+      importSessionId: 'new-session'
+    });
+  });
+
   it('reports initialization and command failures without leaving the workflow busy', async () => {
     const bridge = createBridge({
       runtimeConfig: vi.fn(async () => {

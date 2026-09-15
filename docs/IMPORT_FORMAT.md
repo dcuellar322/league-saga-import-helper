@@ -48,19 +48,19 @@ on the league and the data categories selected by the user.
 
 ## Envelope
 
-| Field                      | Meaning                                                       |
-| -------------------------- | ------------------------------------------------------------- |
-| `kind`                     | Always `league-history`                                       |
-| `contractVersion`          | Exact history-contract version; currently `0.3.0`             |
-| `provider`                 | Source provider: `espn`, `yahoo`, `sleeper`, or `mock`        |
-| `generatedAt`              | UTC or offset-aware ISO 8601 generation timestamp             |
-| `helper`                   | Public generator name, version, and operating-system platform |
-| `importSessionId`          | Optional non-secret LeagueSaga upload-session correlation ID  |
-| `leagueExternalId`         | Provider's league ID; never a LeagueSaga database ID          |
-| `leagueName`               | Latest normalized league name for display                     |
-| `startSeason`, `endSeason` | Oldest and newest included season                             |
-| `seasons`                  | Ordered, unique season documents                              |
-| `warnings`                 | Package-level coverage or availability notices                |
+| Field                      | Meaning                                                            |
+| -------------------------- | ------------------------------------------------------------------ |
+| `kind`                     | Always `league-history`                                            |
+| `contractVersion`          | Exact history-contract version; currently `0.3.0`                  |
+| `provider`                 | Source provider: `espn`, `yahoo`, `sleeper`, or `mock`             |
+| `generatedAt`              | UTC ISO 8601 generation timestamp, with minute or second precision |
+| `helper`                   | Public generator name, version, and operating-system platform      |
+| `importSessionId`          | Optional non-secret LeagueSaga upload-session correlation ID       |
+| `leagueExternalId`         | Provider's league ID; never a LeagueSaga database ID               |
+| `leagueName`               | Latest normalized league name for display                          |
+| `startSeason`, `endSeason` | Oldest and newest included season                                  |
+| `seasons`                  | Ordered, unique season documents                                   |
+| `warnings`                 | Package-level coverage or availability notices                     |
 
 ## Season document
 

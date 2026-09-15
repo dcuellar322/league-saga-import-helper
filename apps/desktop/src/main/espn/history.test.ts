@@ -21,7 +21,7 @@ describe('ESPN history imports', () => {
   });
 
   it('imports every linked season when no start year is supplied', async () => {
-    const fetchSeason = vi.fn(async ({ season }: { season: number }) =>
+    const fetchSeason = vi.fn(async ({ season }: { season: number }, _options: { helperVersion?: string } = {}) =>
       season === 2026 ? { status: { previousSeasons: [2024, 2025] } } : { season }
     );
 
@@ -33,6 +33,7 @@ describe('ESPN history imports', () => {
 
     expect(history.seasons.map((bundle) => bundle.season)).toEqual([2024, 2025, 2026]);
     expect(fetchSeason.mock.calls.map(([params]) => params.season)).toEqual([2026, 2024, 2025]);
+    expect(fetchSeason.mock.calls.every(([, options]) => options?.helperVersion === '0.3.0')).toBe(true);
   });
 
   it('imports from the selected start year and skips missing seasons', async () => {

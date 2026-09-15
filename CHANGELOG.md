@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Microsoft Store installations delegate updates to the Store and reject GitHub installer downloads and restarts.
+- Refresh the mature dependency set after a 10-day soak period, including Electron 44, Vitest 5, ESLint, Zod, and related type and build packages. Electron 44 raises the minimum macOS version to 13.
+- Clarify unavailable-provider guidance and keep release instructions aligned with the current Mac, Linux, optional Windows, and Store workflows.
+
+### Fixed
+
+- Cancel and ignore in-flight import or upload results when a new LeagueSaga session link arrives.
+- Report the current app version in ESPN requests and production smoke-test packages instead of stale hard-coded versions.
 
 ## [0.3.2] - 2026-09-15
 

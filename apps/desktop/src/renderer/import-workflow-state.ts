@@ -123,6 +123,10 @@ export function importWorkflowReducer(state: ImportWorkflowState, action: Import
         deepLinkSettings,
         settings: { ...state.settings, ...settings },
         step: action.settings.leagueId ? 'details' : 'provider',
+        history: null,
+        busyAction: null,
+        uploadResult: null,
+        includedCategories: DEFAULT_INCLUDED_CATEGORIES,
         notice: {
           tone: 'success',
           title: 'Connected to LeagueSaga',

@@ -1,5 +1,6 @@
 {
   "name": "league-saga-import-helper",
+  "private": true,
   "productName": "LeagueSaga Import Helper",
   "version": "0.3.2",
   "description": "Secure local fantasy league import helper for LeagueSaga.",
@@ -123,16 +124,16 @@
     "electron-updater": "^6.8.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.4.1",
     "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4",
+    "@types/react-dom": "^19.2.7",
     "concurrently": "^10.0.5",
     "cross-env": "^10.1.0",
-    "electron": "43.4.1",
-    "electron-builder": "^26.15.7",
+    "electron": "44.2.0",
+    "electron-builder": "^26.16.0",
     "plist": "^5.0.0",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",

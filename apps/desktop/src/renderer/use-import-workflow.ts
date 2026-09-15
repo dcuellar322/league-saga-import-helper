@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, type Dispatch, type SetStateAction } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, type Dispatch, type SetStateAction } from 'react';
 import type { DeepLinkSettings, HelperSettings, ImportSourceProvider } from '../shared/ipc';
 import { formatError } from './errors';
 import { createDeliveryHistory, type IncludedCategories } from './import-review';
@@ -13,6 +13,8 @@ import type { BusyAction, Notice } from './components';
 export function useImportWorkflow() {
   const bridge = window.leagueSaga;
   const [state, dispatch] = useReducer(importWorkflowReducer, undefined, createInitialImportWorkflowState);
+  const operationRevision = useRef(0);
+  const activeOperation = useRef<BusyAction | null>(null);
   const validation = useMemo(() => getImportWorkflowValidation(state.settings), [state.settings]);
   const deliveryHistory = useMemo(
     () => (state.history ? createDeliveryHistory(state.history, state.includedCategories) : null),
@@ -43,7 +45,12 @@ export function useImportWorkflow() {
     };
 
     const applyDeepLink = (settings: DeepLinkSettings) => {
-      if (!disposed) dispatch({ type: 'deep-link-received', settings });
+      if (disposed) return;
+      operationRevision.current += 1;
+      if (activeOperation.current === 'importing') void bridge.cancelEspnImport().catch(() => undefined);
+      if (activeOperation.current === 'uploading') void bridge.cancelUpload().catch(() => undefined);
+      activeOperation.current = null;
+      dispatch({ type: 'deep-link-received', settings });
     };
 
     const unsubscribe = bridge.onDeepLink(applyDeepLink);
@@ -121,26 +128,36 @@ export function useImportWorkflow() {
     dispatch({ type: 'included-categories-changed', categories });
   };
 
-  async function refreshStatus() {
+  async function refreshStatus(isCurrent: () => boolean = () => true) {
     const status = await bridge.getEspnSessionStatus();
-    dispatch({ type: 'session-status-changed', status });
+    if (isCurrent()) dispatch({ type: 'session-status-changed', status });
     return status;
   }
 
-  async function persistSettings(next = state.settings) {
+  async function persistSettings(next = state.settings, isCurrent: () => boolean = () => true) {
     const saved = await bridge.saveSettings(next);
-    dispatch({ type: 'settings-saved', settings: saved });
+    if (isCurrent()) dispatch({ type: 'settings-saved', settings: saved });
     return saved;
   }
 
-  async function runBusy(action: BusyAction, operation: () => Promise<void>, clearUploadResult = false) {
+  async function runBusy(
+    action: BusyAction,
+    operation: (isCurrent: () => boolean) => Promise<void>,
+    clearUploadResult = false
+  ) {
+    const revision = operationRevision.current;
+    const isCurrent = () => operationRevision.current === revision;
+    activeOperation.current = action;
     startBusy(action, clearUploadResult);
     try {
-      await operation();
+      await operation(isCurrent);
     } catch (error) {
-      showError(error);
+      if (isCurrent()) showError(error);
     } finally {
-      dispatch({ type: 'busy-finished' });
+      if (isCurrent()) {
+        if (activeOperation.current === action) activeOperation.current = null;
+        dispatch({ type: 'busy-finished' });
+      }
     }
   }
 
@@ -157,8 +174,9 @@ export function useImportWorkflow() {
   }
 
   async function checkSession() {
-    await runBusy('checking-session', async () => {
-      const status = await refreshStatus();
+    await runBusy('checking-session', async (isCurrent) => {
+      const status = await refreshStatus(isCurrent);
+      if (!isCurrent()) return;
       setNotice(
         status.isSignedIn
           ? {
@@ -176,9 +194,11 @@ export function useImportWorkflow() {
   }
 
   async function openEspn() {
-    await runBusy('opening-espn', async () => {
-      const saved = await persistSettings();
+    await runBusy('opening-espn', async (isCurrent) => {
+      const saved = await persistSettings(state.settings, isCurrent);
+      if (!isCurrent()) return;
       await bridge.openEspnLogin({ leagueId: saved.leagueId, season: saved.season });
+      if (!isCurrent()) return;
       goToStep('connect');
       setNotice({
         tone: 'info',
@@ -191,13 +211,15 @@ export function useImportWorkflow() {
   async function importEspn() {
     await runBusy(
       'importing',
-      async () => {
-        const saved = await persistSettings();
+      async (isCurrent) => {
+        const saved = await persistSettings(state.settings, isCurrent);
+        if (!isCurrent()) return;
         const result = await bridge.importFromEspn({
           leagueId: saved.leagueId,
           season: saved.season,
           importSessionId: saved.importSessionId
         });
+        if (!isCurrent()) return;
         dispatch({
           type: 'import-ready',
           history: result.history,
@@ -217,13 +239,15 @@ export function useImportWorkflow() {
   async function importMock() {
     await runBusy(
       'mocking',
-      async () => {
-        const saved = await persistSettings();
+      async (isCurrent) => {
+        const saved = await persistSettings(state.settings, isCurrent);
+        if (!isCurrent()) return;
         const result = await bridge.createMockImport({
           leagueId: saved.leagueId || 'mock-league',
           season: saved.season,
           importSessionId: saved.importSessionId
         });
+        if (!isCurrent()) return;
         dispatch({
           type: 'import-ready',
           history: result.history,
@@ -240,9 +264,9 @@ export function useImportWorkflow() {
 
   async function saveBundle() {
     if (!deliveryHistory) return;
-    await runBusy('saving', async () => {
+    await runBusy('saving', async (isCurrent) => {
       const result = await bridge.saveBundleToDisk(deliveryHistory);
-      if (!result.canceled) {
+      if (isCurrent() && !result.canceled) {
         setNotice({
           tone: 'success',
           title: 'JSON saved locally',
@@ -262,14 +286,15 @@ export function useImportWorkflow() {
       });
       return;
     }
-    await runBusy('uploading', async () => {
-      const saved = await persistSettings();
+    await runBusy('uploading', async (isCurrent) => {
+      const saved = await persistSettings(state.settings, isCurrent);
+      if (!isCurrent()) return;
       const result = await bridge.uploadBundle({
         apiBaseUrl: saved.apiBaseUrl,
         importToken: saved.importToken,
         bundle: deliveryHistory
       });
-      dispatch({ type: 'upload-finished', result });
+      if (isCurrent()) dispatch({ type: 'upload-finished', result });
     });
   }
 
@@ -291,9 +316,10 @@ export function useImportWorkflow() {
   }
 
   async function clearSession() {
-    await runBusy('clearing-session', async () => {
+    await runBusy('clearing-session', async (isCurrent) => {
       await bridge.clearEspnSession();
-      await refreshStatus();
+      await refreshStatus(isCurrent);
+      if (!isCurrent()) return;
       setNotice({
         tone: 'success',
         title: 'ESPN session cleared',

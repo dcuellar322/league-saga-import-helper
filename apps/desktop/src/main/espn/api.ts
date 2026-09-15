@@ -6,7 +6,10 @@ export type EspnFetchParams = {
   season: number;
 };
 
-type FetchOptions = { signal?: AbortSignal };
+type FetchOptions = {
+  signal?: AbortSignal;
+  helperVersion?: string;
+};
 
 export type EspnApiErrorCode = 'auth' | 'not_found' | 'rate_limited' | 'unavailable' | 'rejected';
 
@@ -69,7 +72,7 @@ async function fetchEspnPayload(
         headers: {
           accept: 'application/json',
           ...(cookieHeader ? { cookie: cookieHeader } : {}),
-          'user-agent': 'LeagueSaga Import Helper/0.3.0',
+          'user-agent': `LeagueSaga-Import-Helper/${options.helperVersion ?? 'unknown'}`,
           ...extraHeaders
         },
         signal
@@ -366,14 +369,17 @@ function espnStatusError(status: number): EspnApiError {
 
 async function retryDelay(attempt: number, signal?: AbortSignal): Promise<void> {
   await new Promise<void>((resolve, reject) => {
-    const timeout = setTimeout(resolve, 350 * 2 ** attempt);
-    signal?.addEventListener(
-      'abort',
+    const onAbort = () => {
+      clearTimeout(timeout);
+      reject(new Error('Import canceled.'));
+    };
+    const timeout = setTimeout(
       () => {
-        clearTimeout(timeout);
-        reject(new Error('Import canceled.'));
+        signal?.removeEventListener('abort', onAbort);
+        resolve();
       },
-      { once: true }
+      350 * 2 ** attempt
     );
+    signal?.addEventListener('abort', onAbort, { once: true });
   });
 }

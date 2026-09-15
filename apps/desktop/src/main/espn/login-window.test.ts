@@ -37,12 +37,14 @@ const electron = vi.hoisted(() => {
 
 const espnSession = vi.hoisted(() => ({ setPermissionRequestHandler: vi.fn() }));
 const security = vi.hoisted(() => ({
-  hardenWindow: vi.fn(),
-  isAllowedEspnAuthUrl: vi.fn((url: string) => url.startsWith('https://fantasy.espn.com/'))
+  hardenWindow: vi.fn()
 }));
 
 vi.mock('electron', () => electron);
-vi.mock('./cookies.js', () => ({ getEspnSession: () => espnSession }));
+vi.mock('./cookies.js', () => ({
+  ESPN_SESSION_PARTITION: 'leaguesaga-espn-import',
+  getEspnSession: () => espnSession
+}));
 vi.mock('../security.js', () => security);
 
 import { closeEspnLoginWindow, openEspnLoginWindow } from './login-window.js';
@@ -76,21 +78,13 @@ describe('ESPN login window', () => {
     expect(permissionCallback).toHaveBeenCalledWith(false);
   });
 
-  it('reuses the existing window and blocks unexpected direct navigation', async () => {
+  it('reuses the existing hardened window', async () => {
     await openEspnLoginWindow({});
     const window = electron.BrowserWindow.instances[0];
     await openEspnLoginWindow({ leagueId: '456', season: 2024 });
     expect(electron.BrowserWindow.instances).toHaveLength(1);
     expect(window?.focus).toHaveBeenCalledOnce();
-
-    const event = { preventDefault: vi.fn() };
-    const navigate = window?.listeners.get('webContents:will-navigate');
-    navigate?.(event, 'https://evil.example/');
-    expect(event.preventDefault).toHaveBeenCalledOnce();
-
-    const allowedEvent = { preventDefault: vi.fn() };
-    navigate?.(allowedEvent, 'https://fantasy.espn.com/football/');
-    expect(allowedEvent.preventDefault).not.toHaveBeenCalled();
+    expect(security.hardenWindow).toHaveBeenCalledOnce();
   });
 
   it('shows the new window when ready and closes it explicitly', async () => {

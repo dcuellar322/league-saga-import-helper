@@ -42,8 +42,9 @@ See [docs/PRIVACY.md](docs/PRIVACY.md), [docs/SECURITY.md](docs/SECURITY.md), an
 
 ## Requirements
 
-- Node.js 22.13 or newer
-- npm 10 or newer
+- Development: Node.js 22.13 or newer and npm 10 or newer.
+- Official macOS builds: macOS 13 or newer.
+- Official Linux builds: see [Linux installation](docs/LINUX.md) for the verified distributions.
 
 ## Development
 
@@ -98,6 +99,9 @@ Run the complete local quality suite:
 ```bash
 npm run quality
 ```
+
+Dependency updates use a 10-day soak period. Choose the newest stable release that was published at
+least 10 days ago, update `package-lock.json`, then run the complete quality suite and package check.
 
 Build the app:
 

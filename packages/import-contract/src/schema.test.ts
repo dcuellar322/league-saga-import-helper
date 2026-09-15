@@ -102,6 +102,16 @@ describe('LeagueSaga import contract', () => {
     expect(history.seasons[0]?.teams[0]).not.toHaveProperty('externalRef');
   });
 
+  it('preserves the published UTC timestamp precision rules', () => {
+    const minutePrecision = createMockHistoryImport();
+    minutePrecision.generatedAt = '2026-09-15T12:34Z';
+    expect(safeValidateHistoryImport(minutePrecision).success).toBe(true);
+
+    const offsetTimestamp = createMockHistoryImport();
+    offsetTimestamp.generatedAt = '2026-09-15T12:34:56-05:00';
+    expect(safeValidateHistoryImport(offsetTimestamp).success).toBe(false);
+  });
+
   it('rejects a bare history season as an upload payload', () => {
     expect(() => validateImportPayload(createMockHistorySeason())).toThrow();
   });

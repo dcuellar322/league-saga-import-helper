@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { IMPORT_CONTRACT_VERSION } from './version.js';
 
+// The published 0.3 contract accepts both minute- and second-precision UTC timestamps.
+// Zod 4.5 made seconds mandatory by default, so keep both forms explicit here.
+const UtcDateTimeSchema = z.union([z.string().datetime({ precision: -1 }), z.string().datetime()]);
+
 export const ImportProviderSchema = z.enum(['espn', 'yahoo', 'sleeper', 'mock']);
 
 export const MatchupTeamScoreSchema = z.object({
@@ -83,7 +87,7 @@ export const HistoryRosterEntrySchema = z.object({
   player: HistoryPlayerSchema,
   lineupSlot: z.string().optional(),
   acquisitionType: z.string().optional(),
-  acquisitionDate: z.string().datetime().optional(),
+  acquisitionDate: UtcDateTimeSchema.optional(),
   injuryStatus: z.string().optional()
 });
 
@@ -126,7 +130,7 @@ export const HistoryTransactionItemSchema = z
 export const HistoryTransactionSchema = z.object({
   externalId: z.string().min(1),
   type: z.enum(['add', 'drop', 'trade', 'draft', 'waiver', 'free_agent', 'unknown']),
-  occurredAt: z.string().datetime().optional(),
+  occurredAt: UtcDateTimeSchema.optional(),
   status: z.string().optional(),
   scoringPeriodId: z.number().int().positive().optional(),
   items: z.array(HistoryTransactionItemSchema).min(1),
@@ -296,7 +300,7 @@ export const LeagueSagaHistoryImportSchema = z
     kind: z.literal('league-history'),
     contractVersion: z.literal(IMPORT_CONTRACT_VERSION),
     provider: ImportProviderSchema,
-    generatedAt: z.string().datetime(),
+    generatedAt: UtcDateTimeSchema,
     helper: z.object({
       name: z.string().min(1),
       version: z.string().min(1),

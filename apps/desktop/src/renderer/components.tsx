@@ -51,14 +51,14 @@ const PROVIDERS: Array<{
     name: 'Yahoo',
     mark: 'Y!',
     description: 'Connect a Yahoo account, choose a league, and import its history.',
-    availability: 'Adapter coming soon'
+    availability: 'Coming soon'
   },
   {
     id: 'sleeper',
     name: 'Sleeper',
     mark: 'S',
     description: 'Find a public league and bring its linked seasons into LeagueSaga.',
-    availability: 'Adapter coming soon'
+    availability: 'Coming soon'
   }
 ];
 
@@ -355,17 +355,14 @@ export function ConnectStep({
         <StepHeader
           kicker="Step 3"
           title={`Connect to ${provider}`}
-          body={`The wizard now carries ${provider} context through every step, but this release does not include the ${provider} data adapter yet.`}
+          body={`${provider} imports are planned, but they are not available in this release. Choose ESPN to import a league now.`}
         />
         <div className={`provider-unavailable ${settings.provider}`}>
           <span className="provider-mark">{settings.provider === 'yahoo' ? 'Y!' : 'S'}</span>
           <div>
-            <p className="eyebrow">Adapter coming soon</p>
+            <p className="eyebrow">Coming soon</p>
             <h3>{provider} imports are not available in this build</h3>
-            <p>
-              A production connection needs provider-specific authentication, API fetching, normalization, and contract
-              validation. This screen is ready for that adapter without pretending the import works today.
-            </p>
+            <p>We will enable this option after its sign-in, history, review, and privacy protections are ready.</p>
           </div>
         </div>
       </section>
@@ -402,7 +399,7 @@ export function ConnectStep({
           <CredentialCheck label="ESPN session" detected={status.hasEspnS2} />
         </div>
         <p className="session-detail">
-          These credentials remain encrypted in the helper's isolated local session and are never uploaded.
+          These credentials stay in the helper's isolated local session and are never uploaded.
         </p>
       </div>
       <div className="actions step-actions">

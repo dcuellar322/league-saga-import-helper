@@ -1,4 +1,5 @@
 import { createMockHistoryImport, validateHistoryImport } from '@leaguesaga/import-contract';
+import { readFile } from 'node:fs/promises';
 
 const token = process.env.LEAGUESAGA_SMOKE_TOKEN;
 const productionApiBase = 'https://portal.leaguesaga.com';
@@ -7,11 +8,13 @@ const importSessionId = process.env.LEAGUESAGA_SMOKE_SESSION_ID;
 if (!token || !importSessionId) throw new Error('LEAGUESAGA_SMOKE_TOKEN and LEAGUESAGA_SMOKE_SESSION_ID are required.');
 if (apiBase !== productionApiBase) throw new Error(`The production smoke test only permits ${productionApiBase}.`);
 
+const desktopPackage = JSON.parse(await readFile(new URL('../apps/desktop/package.json', import.meta.url), 'utf-8'));
+
 const leagueExternalId = '424242';
 const generated = createMockHistoryImport([new Date().getUTCFullYear()], {
   leagueExternalId,
   importSessionId,
-  helperVersion: '0.3.1',
+  helperVersion: desktopPackage.version,
   platform: process.platform
 });
 const bundle = validateHistoryImport({

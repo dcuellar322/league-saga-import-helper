@@ -11,9 +11,12 @@ describe('ESPN requests', () => {
 
   it('returns JSON without exposing cookie values', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: 123 }), { status: 200 })));
-    await expect(fetchEspnLeaguePayload({ leagueId: '123', season: 2026 })).resolves.toEqual({ id: 123 });
+    await expect(
+      fetchEspnLeaguePayload({ leagueId: '123', season: 2026 }, { helperVersion: '0.3.2' })
+    ).resolves.toEqual({ id: 123 });
     const headers = (vi.mocked(fetch).mock.calls[0]?.[1] as RequestInit).headers as Record<string, string>;
     expect(headers.cookie).toContain('redacted');
+    expect(headers['user-agent']).toBe('LeagueSaga-Import-Helper/0.3.2');
   });
 
   it('turns access failures into an actionable sanitized error', async () => {

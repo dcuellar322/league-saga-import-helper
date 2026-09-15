@@ -46,7 +46,7 @@ export async function importEspnHistory(
   if (params.startYear === undefined) {
     const currentPayload = await dependencies.fetchSeason(
       { leagueId: params.leagueId, season: context.currentSeason },
-      { signal: context.signal }
+      { signal: context.signal, helperVersion: context.helperVersion }
     );
     payloads.set(context.currentSeason, currentPayload);
     seasonYears = discoverEspnSeasonYears(currentPayload, context.currentSeason);
@@ -63,7 +63,10 @@ export async function importEspnHistory(
     try {
       const payload =
         payloads.get(season) ??
-        (await dependencies.fetchSeason({ leagueId: params.leagueId, season }, { signal: context.signal }));
+        (await dependencies.fetchSeason(
+          { leagueId: params.leagueId, season },
+          { signal: context.signal, helperVersion: context.helperVersion }
+        ));
       const transformContext: TransformContext = {
         leagueId: params.leagueId,
         season

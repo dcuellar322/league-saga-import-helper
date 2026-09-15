@@ -26,7 +26,7 @@ protection or ruleset setting.
 ## Local package
 
 ```bash
-npm install
+npm ci
 npm run test:coverage
 npm run typecheck
 npm run make
@@ -38,10 +38,18 @@ The GitHub release must include Electron Builder's `latest*.yml` update metadata
 `.blockmap` files alongside the installers. The in-app Settings updater depends on those files to
 select, verify, download, and install the correct signed artifact.
 
-Before non-technical beta users receive builds, macOS and Windows artifacts must be signed,
+Before non-technical beta users receive builds, any macOS and Windows artifacts must be signed,
 macOS artifacts must be notarized, and each GitHub release must include SHA-256 checksums.
 Treat missing signing/notarization or missing checksums as release blockers for beta and public
 distribution.
+
+## Dependency maintenance
+
+Use a 10-day soak period for direct npm dependencies. For each outdated dependency, choose the
+newest stable release published at least 10 full days ago. Do not select a newer unsoaked release
+only because it carries the `latest` tag. Update the direct dependency ranges and `package-lock.json`
+together, review major-version release notes, then run `npm audit --omit=dev`, `npm run quality`, and
+`npm run package`. Record the update under `Unreleased` in the changelog.
 
 ## macOS signing and notarization
 
@@ -66,7 +74,9 @@ WINDOWS_CSC_LINK=
 WINDOWS_CSC_KEY_PASSWORD=
 ```
 
-Unsigned builds are acceptable for local development. The tag release workflow deliberately fails if signing or notarization secrets are absent.
+Unsigned builds are acceptable for local development. Release jobs fail when a selected platform
+requires signing or notarization credentials and those credentials are absent. The normal tag flow
+builds macOS and Linux; Windows runs only when `platforms=all` is selected manually.
 
 ## Checksums
 
@@ -82,14 +92,15 @@ that the contract package matches its source version. App-only patch releases pr
 ## Suggested release naming
 
 ```text
-LeagueSaga Import Helper v0.3.0
+LeagueSaga Import Helper vX.Y.Z
 
 Assets:
-- LeagueSagaImportHelper-0.3.0-mac-arm64.dmg
-- LeagueSagaImportHelper-0.3.0-mac-x64.dmg
-- LeagueSagaImportHelper-0.3.0-win-x64.exe
-- LeagueSagaImportHelper-0.3.0-linux-x86_64.AppImage
-- LeagueSagaImportHelper-0.3.0-linux-amd64.deb
+- LeagueSagaImportHelper-X.Y.Z-mac-arm64.dmg
+- LeagueSagaImportHelper-X.Y.Z-mac-x64.dmg
+- LeagueSagaImportHelper-X.Y.Z-win-x64.exe (when Windows is selected)
+- LeagueSagaImportHelper-X.Y.Z-linux-x86_64.AppImage
+- LeagueSagaImportHelper-X.Y.Z-linux-amd64.deb
+- LeagueSagaImportHelper-X.Y.Z-linux-x86_64.rpm
 - latest.yml, latest-mac.yml, and latest-linux.yml
 - generated installer and zip .blockmap files
 - SHA256SUMS.txt
@@ -114,7 +125,7 @@ The production API and continuation origin is `https://portal.leaguesaga.com`. A
 blocked if a packaged deep link, upload, or continuation targets the marketing hostname, apex
 hostname, localhost, or an unrelated origin.
 
-## First Mac release
+## GitHub release pipeline
 
 Tag pushes build macOS and Linux. To include Windows, dispatch Release with `platforms=all`;
 select a version tag to stage a release, or a branch to build artifacts only.
@@ -129,8 +140,8 @@ Developer ID signatures, hardened runtime, notarization and Gatekeeper acceptanc
 packaged production deep-link smoke test using the executable named in Info.plist.
 
 Successful tagged builds create a draft GitHub Release with SHA-256 checksums. Before publishing,
-run the production preview smoke test and review its result. For the first release there is no
-previous version available for an upgrade test; verify the ZIP payload on both architectures.
+run the production preview smoke test, review its result, and complete the prior-version update
+test described above.
 
 For the production smoke test, create a fresh ESPN Import Helper session in the portal for league
 ID **424242**, with no starting year. Copy the Open Import Helper link and save its `token` and
