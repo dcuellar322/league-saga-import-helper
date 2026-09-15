@@ -116,3 +116,11 @@ Dispatch Production upload smoke test against the release tag before the session
 script uploads synthetic data for that exact league ID; it does not commit an import.
 After all checks pass, publish the draft release. The portal's existing macOS link points to
 GitHub's latest release page.
+
+The **Publish verified Mac release** workflow promotes a successful tagged Release automatically
+only when the production smoke workflow has also succeeded for the same commit. It checks the tag
+still resolves to that commit, downloads the draft assets, verifies their SHA-256 checksums, and
+requires both architecture installers and ZIP entries in the updater metadata before publishing.
+Run the production smoke test while Release is waiting for notarization so that its evidence is
+available when Release completes. If that evidence is missing, the release remains a draft.
+The **Notarization status** workflow can read Apple's submission history without resubmitting apps.

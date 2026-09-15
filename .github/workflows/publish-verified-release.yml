@@ -1,0 +1,52 @@
+name: Publish verified Mac release
+
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: publish-verified-mac-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Require matching tag and successful production preview
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          tag_sha=$(gh api "repos/$GH_REPO/commits/$RELEASE_TAG" --jq .sha)
+          test "$tag_sha" = "$RELEASE_SHA"
+          gh api "repos/$GH_REPO/actions/workflows/production-smoke.yml/runs?head_sha=$RELEASE_SHA&status=success&per_page=100" \
+            --jq '.workflow_runs[] | select(.event == "workflow_dispatch") | .head_sha' | grep -Fxq "$RELEASE_SHA"
+          test "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" = true
+      - name: Download and verify release assets
+        run: |
+          set -euo pipefail
+          mkdir artifacts
+          gh release download "$RELEASE_TAG" --dir artifacts
+          cd artifacts
+          sha256sum --check SHA256SUMS.txt
+          version="${RELEASE_TAG#v}"
+          for arch in arm64 x64; do
+            test -s "LeagueSagaImportHelper-$version-mac-$arch.dmg"
+            test -s "LeagueSagaImportHelper-$version-mac-$arch.zip"
+            grep -Fq "LeagueSagaImportHelper-$version-mac-$arch.zip" latest-mac.yml
+          done
+      - name: Publish verified release
+        run: gh release edit "$RELEASE_TAG" --draft=false --latest
