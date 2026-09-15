@@ -461,7 +461,7 @@ export function SettingsModal({
 }) {
   const status =
     updateBusy === 'checking'
-      ? 'Checking the signed release channel…'
+      ? 'Checking the official release channel…'
       : updateBusy === 'downloading'
         ? 'Downloading and verifying the update…'
         : updateInfo?.status === 'available'
@@ -470,7 +470,7 @@ export function SettingsModal({
             ? 'You are running the latest available version.'
             : updateInfo?.status === 'unavailable'
               ? 'The release service is unavailable. Try again later.'
-              : 'Check the signed LeagueSaga release channel for a newer version.';
+              : 'Check the official LeagueSaga release channel for a newer version.';
 
   return (
     <div

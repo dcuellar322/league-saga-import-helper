@@ -7,10 +7,10 @@ on:
   workflow_dispatch:
     inputs:
       platforms:
-        description: Platforms to build (tags default to macOS)
+        description: Platforms to build (tags default to macOS and Linux)
         type: choice
-        options: [macos, all]
-        default: macos
+        options: [desktop, macos, linux, all]
+        default: desktop
 
 concurrency:
   group: release-${{ github.ref }}
@@ -39,6 +39,7 @@ jobs:
       - run: npm run build
 
   macos:
+    if: inputs.platforms != 'linux'
     needs: quality
     runs-on: macos-15
     env:
@@ -161,9 +162,9 @@ jobs:
           if-no-files-found: error
 
   linux:
-    if: inputs.platforms == 'all'
+    if: inputs.platforms != 'macos'
     needs: quality
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-node@v7.0.0
@@ -173,27 +174,39 @@ jobs:
       - run: npm ci
       - run: npm run build:contract
       - run: npm -w apps/desktop run make -- --linux --x64 --publish never
-      - name: Smoke test packaged app and deep link
-        run: |
-          xvfb-run "apps/desktop/dist/linux-unpacked/league-saga-import-helper" --smoke-test "leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&startYear=2025&importSessionId=smoke-session"
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: linux-x64
           path: |
             apps/desktop/dist/*.AppImage
             apps/desktop/dist/*.deb
-            apps/desktop/dist/*.zip
             apps/desktop/dist/latest*.yml
             apps/desktop/dist/*.blockmap
           if-no-files-found: error
 
+  verify-linux:
+    needs: linux
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          name: linux-x64
+          path: artifacts
+      - name: Install and verify Linux packages
+        run: bash scripts/verify-linux.sh artifacts
+
   publish:
     if: >-
       always() && startsWith(github.ref, 'refs/tags/') &&
-      needs.verify-macos.result == 'success' &&
+      (needs.verify-macos.result == 'success' || (inputs.platforms == 'linux' && needs.verify-macos.result == 'skipped')) &&
       (needs.windows.result == 'success' || needs.windows.result == 'skipped') &&
-      (needs.linux.result == 'success' || needs.linux.result == 'skipped')
-    needs: [verify-macos, windows, linux]
+      (needs.verify-linux.result == 'success' || (inputs.platforms == 'macos' && needs.verify-linux.result == 'skipped'))
+    needs: [verify-macos, windows, verify-linux]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8.0.1

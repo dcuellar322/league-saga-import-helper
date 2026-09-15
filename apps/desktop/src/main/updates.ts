@@ -41,7 +41,7 @@ export async function downloadUpdate(): Promise<void> {
   const result = await autoUpdater.checkForUpdates();
   const latestVersion = result?.updateInfo.version;
   if (!latestVersion || compareVersions(latestVersion, app.getVersion()) <= 0) {
-    throw new Error('No newer signed release is available to download.');
+    throw new Error('No newer release is available to download.');
   }
   await autoUpdater.downloadUpdate();
 }

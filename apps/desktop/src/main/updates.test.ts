@@ -57,7 +57,7 @@ describe('release update checks', () => {
     await expect(checkForUpdates()).resolves.toEqual({ status: 'current', currentVersion: '0.2.0' });
   });
 
-  it('downloads a newer signed update through the packaged updater', async () => {
+  it('downloads a newer update through the packaged updater', async () => {
     updater.checkForUpdates.mockResolvedValue({ updateInfo: { version: '0.3.0' } });
     updater.downloadUpdate.mockResolvedValue(['/tmp/LeagueSagaImportHelper']);
 
@@ -69,7 +69,7 @@ describe('release update checks', () => {
 
   it('refuses updater actions without a newer packaged release', async () => {
     updater.checkForUpdates.mockResolvedValue({ updateInfo: { version: '0.2.0' } });
-    await expect(downloadUpdate()).rejects.toThrow('No newer signed release');
+    await expect(downloadUpdate()).rejects.toThrow('No newer release');
 
     electronApp.isPackaged = false;
     await expect(downloadUpdate()).rejects.toThrow('packaged app');

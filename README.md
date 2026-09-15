@@ -28,7 +28,7 @@ ESPN, Disney, or the NFL. Your use of ESPN remains subject to ESPN's and Disney'
 - Upload a validated historical package to a LeagueSaga preview endpoint.
 - Return directly to the LeagueSaga preview after a successful upload when the API supplies a continuation URL.
 - Clear the helper's ESPN session from inside the app.
-- Save a rotating privacy-safe diagnostic log and download signed app updates from Settings.
+- Save a rotating privacy-safe diagnostic log and download app updates from the official release channel from Settings.
 
 ## Privacy and Security
 
@@ -118,8 +118,9 @@ npm run make
 ```
 
 macOS and Windows release builds should be signed before public distribution.
-The tag release workflow requires signing credentials and stages a draft macOS x64/arm64 release.
-Windows x64 and Linux x64 builds can be selected through the manual release workflow.
+The tag release workflow requires signing credentials and stages a draft release with macOS x64/arm64 and Linux x64 packages.
+The manual release workflow also supports Linux-only builds and optional signed Windows builds.
+See [Linux installation](docs/LINUX.md) for supported systems and package instructions.
 
 See [CHANGELOG.md](CHANGELOG.md) for notable changes and the [Release Guide](docs/RELEASES.md)
 for release preparation and verification.

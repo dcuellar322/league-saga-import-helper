@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Linux x64 AppImage and Debian installers, independent Linux builds, and installed-package checks on Ubuntu.
+- Linux assets and updater metadata checks in the desktop release publication gate.
+
 - Desktop ESPN import flow with local sign-in, league selection, and discovery of linked historical seasons.
 - Review of imported teams and owners, optional inclusion of rosters, matchups, draft picks, and transactions, and JSON export before upload.
 - Validated, provider-neutral history packages using import contract version `0.3.0`.

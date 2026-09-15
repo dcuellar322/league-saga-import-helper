@@ -73,16 +73,32 @@
     "linux": {
       "target": [
         "AppImage",
-        "deb",
-        "zip"
+        "deb"
       ],
       "category": "Game",
-      "maintainer": "Cuellar Labs LLC"
+      "maintainer": "Cuellar Labs LLC",
+      "executableName": "league-saga-import-helper",
+      "syncDesktopName": true
     },
     "publish": {
       "provider": "github",
       "owner": "dcuellar322",
       "repo": "league-saga-import-helper"
+    },
+    "deb": {
+      "depends": [
+        "libgtk-3-0 | libgtk-3-0t64",
+        "libnotify4",
+        "libnss3",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils",
+        "libatspi2.0-0 | libatspi2.0-0t64",
+        "libuuid1",
+        "libsecret-1-0",
+        "libasound2 | libasound2t64",
+        "libgbm1"
+      ]
     }
   },
   "dependencies": {
@@ -105,5 +121,7 @@
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
     "wait-on": "^9.1.0"
-  }
+  },
+  "homepage": "https://www.leaguesaga.com",
+  "desktopName": "league-saga-import-helper.desktop"
 }

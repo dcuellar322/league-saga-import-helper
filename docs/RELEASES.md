@@ -88,7 +88,8 @@ Assets:
 - LeagueSagaImportHelper-0.3.0-mac-arm64.dmg
 - LeagueSagaImportHelper-0.3.0-mac-x64.dmg
 - LeagueSagaImportHelper-0.3.0-win-x64.exe
-- LeagueSagaImportHelper-0.3.0-linux-x64.AppImage, .deb, or .zip
+- LeagueSagaImportHelper-0.3.0-linux-x86_64.AppImage
+- LeagueSagaImportHelper-0.3.0-linux-amd64.deb
 - latest.yml, latest-mac.yml, and latest-linux.yml
 - generated installer and zip .blockmap files
 - SHA256SUMS.txt
@@ -115,7 +116,7 @@ hostname, localhost, or an unrelated origin.
 
 ## First Mac release
 
-Tag pushes build macOS only. To build all platforms, dispatch Release with `platforms=all`;
+Tag pushes build macOS and Linux. To include Windows, dispatch Release with `platforms=all`;
 select a version tag to stage a release, or a branch to build artifacts only.
 Windows still requires its own signing credentials.
 
@@ -140,10 +141,30 @@ script uploads synthetic data for that exact league ID; it does not commit an im
 After all checks pass, publish the draft release. The portal's existing macOS link points to
 GitHub's latest release page.
 
-The **Publish verified Mac release** workflow promotes a successful tagged Release automatically
+The **Publish verified desktop release** workflow promotes a successful tagged Release automatically
 only when the production smoke workflow has also succeeded for the same commit. It checks the tag
 still resolves to that commit, downloads the draft assets, verifies their SHA-256 checksums, and
 requires both architecture installers and ZIP entries in the updater metadata before publishing.
 Run the production smoke test while Release is waiting for notarization so that its evidence is
 available when Release completes. If that evidence is missing, the release remains a draft.
 The **Notarization status** workflow can read Apple's submission history without resubmitting apps.
+
+## Linux releases
+
+Linux x64 builds produce an AppImage and a `.deb`; no ZIP is published because it does not provide
+installation or desktop integration. Build on Ubuntu 22.04 to preserve the supported baseline.
+`verify-linux` installs the `.deb` on Ubuntu 22.04 and 24.04, validates the desktop protocol entry,
+launches that entry with synthetic import details, and checks every updater payload's size and
+SHA-512. Ubuntu 22.04 also runs the AppImage with extraction instead of requiring FUSE.
+No check disables Electron's sandbox. See [Linux installation](LINUX.md).
+
+Manual `platforms=linux` runs independently of Apple and Windows signing. `desktop` builds Mac and
+Linux; `macos` builds only Mac; `all` includes Windows. A branch run produces Actions artifacts;
+a tag run stages a draft. Automatic publication is limited to tag pushes and requires successful
+Mac and Linux verification, matching production-preview evidence, and both Linux packages in
+`latest-linux.yml`, in addition to the existing Mac assets and checksums.
+
+Before announcing Linux support, test ESPN sign-in, review, upload, clearing the session, and browser
+launch links on a Linux desktop, both with the helper closed and already open. Test Settings updates
+from an older installed version for both package formats. The CI smoke tests use synthetic launch
+parameters and do not authenticate to ESPN or prove an upgrade between two published versions.

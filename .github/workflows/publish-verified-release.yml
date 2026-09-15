@@ -1,4 +1,4 @@
-name: Publish verified Mac release
+name: Publish verified desktop release
 
 on:
   workflow_run:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: publish-verified-mac-release
+  group: publish-verified-desktop-release
   cancel-in-progress: false
 
 jobs:
@@ -48,5 +48,9 @@ jobs:
             test -s "LeagueSagaImportHelper-$version-mac-$arch.zip"
             grep -Fq "LeagueSagaImportHelper-$version-mac-$arch.zip" latest-mac.yml
           done
+          test -s "LeagueSagaImportHelper-$version-linux-x86_64.AppImage"
+          test -s "LeagueSagaImportHelper-$version-linux-amd64.deb"
+          grep -Fq "LeagueSagaImportHelper-$version-linux-x86_64.AppImage" latest-linux.yml
+          grep -Fq "LeagueSagaImportHelper-$version-linux-amd64.deb" latest-linux.yml
       - name: Publish verified release
         run: gh release edit "$RELEASE_TAG" --draft=false --latest
