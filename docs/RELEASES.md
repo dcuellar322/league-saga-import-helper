@@ -88,3 +88,30 @@ The manually dispatched **Production upload smoke test** workflow requires appro
 The production API and continuation origin is `https://portal.leaguesaga.com`. A release is
 blocked if a packaged deep link, upload, or continuation targets the marketing hostname, apex
 hostname, localhost, or an unrelated origin.
+
+## First Mac release
+
+Tag pushes build macOS only. To build all platforms, dispatch Release with `platforms=all`;
+select a version tag to stage a release, or a branch to build artifacts only.
+Windows still requires its own signing credentials.
+
+The Mac job builds both architectures with signing required and automatic publishing disabled.
+It validates app signatures and stapled notarization tickets, then signs, notarizes, and staples
+the DMGs. DMGs are excluded from updater metadata because stapling changes their bytes after
+Electron Builder generates metadata. The updater uses the notarized ZIPs instead.
+Fresh Apple Silicon and Intel runners install the DMG contents, extract the updater ZIPs, verify
+Developer ID signatures, hardened runtime, notarization and Gatekeeper acceptance, and run the
+packaged production deep-link smoke test using the executable named in Info.plist.
+
+Successful tagged builds create a draft GitHub Release with SHA-256 checksums. Before publishing,
+run the production preview smoke test and review its result. For the first release there is no
+previous version available for an upgrade test; verify the ZIP payload on both architectures.
+
+For the production smoke test, create a fresh ESPN Import Helper session in the portal for league
+ID **424242**, with no starting year. Copy the Open Import Helper link and save its `token` and
+`importSessionId` values as `LEAGUESAGA_SMOKE_TOKEN` and `LEAGUESAGA_SMOKE_SESSION_ID` in the
+`production-smoke` GitHub environment. Never paste the link or token into logs, issues or chat.
+Dispatch Production upload smoke test against the release tag before the session expires. The
+script uploads synthetic data for that exact league ID; it does not commit an import.
+After all checks pass, publish the draft release. The portal's existing macOS link points to
+GitHub's latest release page.

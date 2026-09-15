@@ -7,7 +7,7 @@ const importSessionId = process.env.LEAGUESAGA_SMOKE_SESSION_ID;
 if (!token || !importSessionId) throw new Error('LEAGUESAGA_SMOKE_TOKEN and LEAGUESAGA_SMOKE_SESSION_ID are required.');
 if (apiBase !== productionApiBase) throw new Error(`The production smoke test only permits ${productionApiBase}.`);
 
-const leagueExternalId = `smoke-${Date.now()}`;
+const leagueExternalId = '424242';
 const generated = createMockHistoryImport([new Date().getUTCFullYear()], {
   leagueExternalId,
   importSessionId,

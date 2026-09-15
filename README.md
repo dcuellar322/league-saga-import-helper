@@ -116,7 +116,8 @@ npm run make
 ```
 
 macOS and Windows release builds should be signed before public distribution.
-The tag release workflow refuses to publish without signing credentials and produces macOS x64/arm64, Windows x64, and Linux x64 artifacts.
+The tag release workflow requires signing credentials and stages a draft macOS x64/arm64 release.
+Windows x64 and Linux x64 builds can be selected through the manual release workflow.
 
 ## Launching From LeagueSaga
 
