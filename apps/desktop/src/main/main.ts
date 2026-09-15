@@ -22,7 +22,8 @@ if (process.defaultApp) {
   if (process.argv.length >= 2) {
     app.setAsDefaultProtocolClient(protocolName, process.execPath, [process.argv[1]]);
   }
-} else {
+} else if (!process.windowsStore) {
+  // Packaged Windows protocol registration comes from the MSIX manifest.
   app.setAsDefaultProtocolClient(protocolName);
 }
 

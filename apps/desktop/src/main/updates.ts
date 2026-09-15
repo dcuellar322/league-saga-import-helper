@@ -5,6 +5,7 @@ import type { UpdateInfo } from '../shared/ipc.js';
 const LATEST_RELEASE_URL = 'https://api.github.com/repos/dcuellar322/league-saga-import-helper/releases/latest';
 
 export async function checkForUpdates(): Promise<UpdateInfo> {
+  if (process.windowsStore) return { status: 'store-managed', currentVersion: app.getVersion() };
   if (!app.isPackaged) return { status: 'current', currentVersion: app.getVersion() };
   try {
     const response = await fetch(LATEST_RELEASE_URL, {
@@ -32,6 +33,7 @@ export async function checkForUpdates(): Promise<UpdateInfo> {
 }
 
 export async function downloadUpdate(): Promise<void> {
+  if (process.windowsStore) throw new Error('Microsoft Store manages updates for this installation.');
   if (!app.isPackaged) throw new Error('Updates can only be installed from a packaged app.');
 
   const { autoUpdater } = electronUpdater;
@@ -47,6 +49,7 @@ export async function downloadUpdate(): Promise<void> {
 }
 
 export function installUpdate(): void {
+  if (process.windowsStore) throw new Error('Microsoft Store manages updates for this installation.');
   if (!app.isPackaged) throw new Error('Updates can only be installed from a packaged app.');
   setImmediate(() => electronUpdater.autoUpdater.quitAndInstall(false, true));
 }

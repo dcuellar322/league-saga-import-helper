@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Unsigned Windows x64 MSIX submission packages with Store identity validation, protocol registration, and Windows packaging checks.
+
+### Changed
+
+- Microsoft Store installations delegate updates to the Store and reject GitHub installer downloads and restarts.
+
 ## [0.3.2] - 2026-09-15
 
 ### Added

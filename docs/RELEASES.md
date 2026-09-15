@@ -189,3 +189,10 @@ desktop URL registration, the packaged renderer, AppImage startup, and updater h
 publication requires these jobs to pass. Containers use namespace capabilities for Electron's
 sandbox; they do not disable the app sandbox or represent every host security policy. Distribution
 versions in the matrix are explicit and should be reviewed when a supported release reaches end of life.
+
+## Microsoft Store (free Windows distribution)
+
+Use the separate **Windows Store package** workflow for unsigned MSIX submission packages.
+Microsoft handles signing and updates after certification. The existing signed NSIS workflow is
+for direct distribution and still requires its signing credentials. Store artifacts are not attached
+to the public desktop GitHub release. See [Microsoft Store setup and verification](WINDOWS_STORE.md).

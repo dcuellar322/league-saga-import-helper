@@ -244,6 +244,21 @@ describe('wizard components', () => {
     );
     expect(screen.getByRole('button', { name: /Download and restart/ })).toBeDefined();
     expect(screen.getByRole('button', { name: /View release notes/ })).toBeDefined();
+    rerender(
+      <SettingsModal
+        version="0.3.2"
+        updateInfo={{ status: 'store-managed', currentVersion: '0.3.2' }}
+        updateBusy={null}
+        onClose={onClose}
+        onCheckForUpdates={vi.fn()}
+        onDownloadAndInstall={vi.fn()}
+        onOpenRelease={vi.fn()}
+        onSaveDiagnostics={vi.fn()}
+      />
+    );
+    expect(screen.getByText(/Microsoft Store manages updates/)).toBeDefined();
+    expect(screen.queryByRole('button', { name: /Download and restart/ })).toBeNull();
+    expect((screen.getByRole('button', { name: /Check for Updates/ }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.mouseDown(document.querySelector('.modal-backdrop')!);
     expect(onClose).toHaveBeenCalledOnce();
   });

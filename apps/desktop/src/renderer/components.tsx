@@ -460,17 +460,19 @@ export function SettingsModal({
   onSaveDiagnostics: () => void;
 }) {
   const status =
-    updateBusy === 'checking'
-      ? 'Checking the official release channel…'
-      : updateBusy === 'downloading'
-        ? 'Downloading and verifying the update…'
-        : updateInfo?.status === 'available'
-          ? `Version ${updateInfo.latestVersion} is ready to download.`
-          : updateInfo?.status === 'current'
-            ? 'You are running the latest available version.'
-            : updateInfo?.status === 'unavailable'
-              ? 'The release service is unavailable. Try again later.'
-              : 'Check the official LeagueSaga release channel for a newer version.';
+    updateInfo?.status === 'store-managed'
+      ? 'Microsoft Store manages updates. Open Microsoft Store and check for updates in Library.'
+      : updateBusy === 'checking'
+        ? 'Checking the official release channel…'
+        : updateBusy === 'downloading'
+          ? 'Downloading and verifying the update…'
+          : updateInfo?.status === 'available'
+            ? `Version ${updateInfo.latestVersion} is ready to download.`
+            : updateInfo?.status === 'current'
+              ? 'You are running the latest available version.'
+              : updateInfo?.status === 'unavailable'
+                ? 'The release service is unavailable. Try again later.'
+                : 'Check the official LeagueSaga release channel for a newer version.';
 
   return (
     <div
@@ -511,7 +513,10 @@ export function SettingsModal({
             <Icon name="refresh" />
           </div>
           <div className="actions">
-            <button disabled={Boolean(updateBusy)} onClick={onCheckForUpdates}>
+            <button
+              disabled={Boolean(updateBusy) || updateInfo?.status === 'store-managed'}
+              onClick={onCheckForUpdates}
+            >
               {updateBusy === 'checking' ? 'Checking…' : 'Check for Updates'} <Icon name="refresh" />
             </button>
             {updateInfo?.status === 'available' && (

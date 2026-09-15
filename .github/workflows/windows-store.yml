@@ -1,0 +1,51 @@
+name: Windows Store package
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  msix:
+    runs-on: windows-2025
+    env:
+      MICROSOFT_STORE_IDENTITY_NAME: ${{ github.event_name == 'workflow_dispatch' && vars.MICROSOFT_STORE_IDENTITY_NAME || 'LeagueSaga.ImportHelper.CITest' }}
+      MICROSOFT_STORE_PUBLISHER: ${{ github.event_name == 'workflow_dispatch' && vars.MICROSOFT_STORE_PUBLISHER || 'CN=LeagueSaga CI Test' }}
+      MICROSOFT_STORE_PUBLISHER_DISPLAY_NAME: ${{ github.event_name == 'workflow_dispatch' && vars.MICROSOFT_STORE_PUBLISHER_DISPLAY_NAME || 'LeagueSaga CI Test' }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Require Store identity for submission builds
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          IDENTITY: ${{ vars.MICROSOFT_STORE_IDENTITY_NAME }}
+          PUBLISHER: ${{ vars.MICROSOFT_STORE_PUBLISHER }}
+          DISPLAY_NAME: ${{ vars.MICROSOFT_STORE_PUBLISHER_DISPLAY_NAME }}
+        run: |
+          if (!$env:IDENTITY -or !$env:PUBLISHER -or !$env:DISPLAY_NAME) { throw 'Configure all three MICROSOFT_STORE repository variables from Partner Center Product identity.' }
+      - name: Build and validate unsigned MSIX
+        run: ./scripts/build-msix.ps1
+      - name: Verify packaged Windows renderer and deep link
+        run: |
+          $exe = Join-Path $PWD 'apps/desktop/dist-store/win-unpacked/LeagueSaga Import Helper.exe'
+          $link = 'leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&startYear=2025&importSessionId=smoke-session'
+          $process = Start-Process $exe -ArgumentList '--smoke-test', $link -PassThru -RedirectStandardOutput smoke.log -RedirectStandardError smoke-error.log
+          if (!$process.WaitForExit(60000)) { $process.Kill(); throw 'Packaged smoke test timed out.' }
+          Get-Content smoke.log
+          if ($process.ExitCode -ne 0 -or !(Select-String -Path smoke.log -Pattern PACKAGED_SMOKE_OK -Quiet)) { Get-Content smoke-error.log; throw 'Packaged smoke test failed.' }
+      - uses: actions/upload-artifact@v7.0.1
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          name: microsoft-store-submission-x64
+          path: |
+            apps/desktop/dist-store/*.msix
+            apps/desktop/dist-store/SHA256SUMS.txt
+          if-no-files-found: error

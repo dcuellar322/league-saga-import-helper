@@ -50,7 +50,7 @@ export type RuntimeConfig = {
 };
 
 export type UpdateInfo = {
-  status: 'available' | 'current' | 'unavailable';
+  status: 'available' | 'current' | 'unavailable' | 'store-managed';
   currentVersion: string;
   latestVersion?: string;
   releaseUrl?: string;

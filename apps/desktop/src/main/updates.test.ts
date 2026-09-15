@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const electronApp = vi.hoisted(() => ({ isPackaged: true, getVersion: () => '0.2.0' }));
 vi.mock('electron', () => ({ app: electronApp }));
@@ -15,12 +15,26 @@ vi.mock('electron-updater', () => ({ default: { autoUpdater: updater } }));
 import { checkForUpdates, downloadUpdate, installUpdate } from './updates.js';
 
 describe('release update checks', () => {
+  afterEach(() => vi.unstubAllGlobals());
   beforeEach(() => {
+    vi.stubGlobal('process', Object.assign(Object.create(process), { windowsStore: undefined }));
     electronApp.isPackaged = true;
     updater.checkForUpdates.mockReset();
     updater.downloadUpdate.mockReset();
     updater.quitAndInstall.mockReset();
     vi.restoreAllMocks();
+  });
+
+  it('delegates MSIX updates to the Store without GitHub or installer access', async () => {
+    vi.stubGlobal('process', Object.assign(Object.create(process), { windowsStore: true }));
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    await expect(checkForUpdates()).resolves.toMatchObject({ status: 'store-managed' });
+    await expect(downloadUpdate()).rejects.toThrow('Microsoft Store');
+    expect(() => installUpdate()).toThrow('Microsoft Store');
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(updater.checkForUpdates).not.toHaveBeenCalled();
+    expect(updater.quitAndInstall).not.toHaveBeenCalled();
   });
 
   it('reports newer trusted GitHub releases', async () => {
