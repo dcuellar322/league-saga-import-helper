@@ -10,17 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Fedora x64 RPM installer and Debian 12/13 package verification, including distro release gates.
-
 - Linux x64 AppImage and Debian installers, independent Linux builds, and installed-package checks on Ubuntu.
 - Linux assets and updater metadata checks in the desktop release publication gate.
-
-- Desktop ESPN import flow with local sign-in, league selection, and discovery of linked historical seasons.
-- Review of imported teams and owners, optional inclusion of rosters, matchups, draft picks, and transactions, and JSON export before upload.
-- Validated, provider-neutral history packages using import contract version `0.3.0`.
-- Launch links from LeagueSaga that prefill an import session and return users to the portal preview after upload.
-- Settings for clearing the ESPN session, viewing privacy-safe diagnostic logs, and downloading signed app updates.
-- Mac release automation for Apple Silicon and Intel, including signing, notarization, checksums, and installation checks on both architectures.
-- Automatic publication after the Mac release checks and production preview smoke test pass for the same commit.
+- Automatic publication after release checks and the production preview smoke test pass for the same commit.
 
 ### Changed
 
@@ -29,6 +21,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Identify the GitHub repository explicitly when staging release assets from a job without a checkout.
+
+## [0.3.1] - 2026-09-15
+
+First public release, with signed and notarized Mac installers for Apple Silicon and Intel.
+
+### Added
+
+- Desktop ESPN import flow with local sign-in, league selection, and discovery of linked historical seasons.
+- Review of imported teams and owners, optional inclusion of rosters, matchups, draft picks, and transactions, and JSON export before upload.
+- Validated, provider-neutral history packages using import contract version `0.3.0`.
+- Launch links from LeagueSaga that prefill an import session and return users to the portal preview after upload.
+- Settings for clearing the ESPN session, viewing privacy-safe diagnostic logs, and downloading signed app updates.
+- Mac release automation for Apple Silicon and Intel, including signing, notarization, checksums, and installation checks on both architectures.
+
+### Fixed
 
 - Handling of legacy ESPN history and transaction imports.
 - Mac updater metadata to use ZIP payloads whose checksums remain valid after installer notarization.
@@ -39,4 +46,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Harden packaged Electron builds with runtime protections and archive integrity checks.
 - Update `js-yaml` to `4.3.2` to address a denial-of-service vulnerability.
 
-[Unreleased]: https://github.com/dcuellar322/league-saga-import-helper/commits/master/
+[Unreleased]: https://github.com/dcuellar322/league-saga-import-helper/compare/v0.3.1...master
+[0.3.1]: https://github.com/dcuellar322/league-saga-import-helper/releases/tag/v0.3.1

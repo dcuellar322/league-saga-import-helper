@@ -158,8 +158,8 @@ all platform checks configured in that tagged workflow; newer platforms added on
 an older tag's release scope.
 
 Download the original run's artifacts, verify updater payload hashes and sizes, generate
-`SHA256SUMS.txt`, and stage a draft. Download the draft again and verify its checksums before
-publishing. Keep links to the original build and preview evidence in the release notes. GitHub CLI
+`SHA256SUMS.txt`, and stage a draft. Verify the uploaded asset sizes and SHA-256 digests against
+the local files before publishing; download the draft again if uploaded digests are unavailable. Keep links to the original build and preview evidence in the release notes. GitHub CLI
 steps without a checkout must set `GH_REPO` (or pass `--repo`) explicitly. A failed historical run
 will retain its failure status after manual recovery.
 
