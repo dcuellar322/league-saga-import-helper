@@ -1,5 +1,28 @@
 # Release Guide
 
+## Maintaining the changelog
+
+Record notable user-facing changes in [CHANGELOG.md](../CHANGELOG.md) under `Unreleased`
+as part of each change. Follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
+use `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security` sections as needed,
+omit empty categories, and describe the impact rather than copying commit messages.
+
+When a release is published, move its entries into a `## [X.Y.Z] - YYYY-MM-DD` section,
+using the app version and actual publication date. Keep the newest release first and retain
+`Unreleased` at the top. A build tag or draft alone does not count as a published release.
+
+Update the reference links at the bottom: `Unreleased` should compare the latest released tag
+with `master`, and each subsequent release should compare its tag with the previous released tag.
+For the first release, link its heading to the GitHub release page. Before any public release,
+the `Unreleased` link points to the repository history.
+
+Use the curated version section in the public release notes. The release workflow currently
+generates GitHub notes from commits; review those notes against the changelog when publishing.
+
+The repository's [.github/CODEOWNERS](../.github/CODEOWNERS) assigns review ownership to
+`@dcuellar322`. Requiring a code-owner approval before merging is a separate GitHub branch
+protection or ruleset setting.
+
 ## Local package
 
 ```bash

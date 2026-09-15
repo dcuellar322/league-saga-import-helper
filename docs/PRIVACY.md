@@ -2,9 +2,9 @@
 
 Effective August 31, 2026
 
-Cuellar Labs LLC, a Texas limited liability company doing business as LeagueSaga, distributes the
-LeagueSaga Import Helper. This statement explains what the helper processes on your computer and
-what it can send to LeagueSaga.
+Cuellar Labs LLC, a Texas limited liability company doing business as LeagueSaga, maintains and
+distributes the LeagueSaga Import Helper and operates the LeagueSaga service. This statement explains
+what the helper processes on your computer and what it can send to LeagueSaga.
 
 The LeagueSaga [Privacy Policy](https://www.leaguesaga.com/privacy-policy/) applies after you
 upload league information to the LeagueSaga service.

@@ -5,7 +5,9 @@ league data into LeagueSaga without asking users to paste credentials into a web
 release includes the production ESPN adapter; Yahoo and Sleeper are represented in the flow as
 upcoming adapters.
 
-Cuellar Labs LLC operates LeagueSaga and distributes the Import Helper.
+Cuellar Labs LLC, a Texas limited liability company doing business as LeagueSaga, maintains this
+repository, distributes the official LeagueSaga Import Helper releases, and operates the LeagueSaga
+service that receives reviewed imports.
 
 The app opens ESPN in an isolated Electron session, lets the user sign in directly with ESPN,
 fetches fantasy league history locally, converts every season into a validated LeagueSaga history
@@ -119,6 +121,9 @@ macOS and Windows release builds should be signed before public distribution.
 The tag release workflow requires signing credentials and stages a draft macOS x64/arm64 release.
 Windows x64 and Linux x64 builds can be selected through the manual release workflow.
 
+See [CHANGELOG.md](CHANGELOG.md) for notable changes and the [Release Guide](docs/RELEASES.md)
+for release preparation and verification.
+
 ## Launching From LeagueSaga
 
 LeagueSaga can prefill an import session by opening the app with the registered custom protocol:
@@ -159,6 +164,10 @@ version policy, example document, and generated JSON Schemas.
 
 ## Open Source
 
+Cuellar Labs LLC maintains this public project and publishes its official desktop releases through
+this repository's [GitHub Releases](https://github.com/dcuellar322/league-saga-import-helper/releases).
+The desktop package also identifies Cuellar Labs LLC as its author and maintainer.
+
 This repository is the public client and integration boundary. It does not contain LeagueSaga's
 database schema, persistence models, billing rules, or server authorization implementation. See
 [Open-Source Boundary](docs/OPEN_SOURCE.md) for the publication checklist and scope.
@@ -169,4 +178,5 @@ Please do not open public issues for vulnerabilities. Use the repository's priva
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE), which records the copyright notice for the source code.
+See [Open-Source Boundary](docs/OPEN_SOURCE.md) for the company's role and the scope of this repository.

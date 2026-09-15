@@ -4,6 +4,21 @@ LeagueSaga Import Helper is designed to be safe to publish as a standalone MIT-l
 public integration contract. Its source explains what the helper does on a user's computer and
 what it can send. It does not need LeagueSaga server source to build, test, inspect, or package.
 
+## Maintainer and service operator
+
+Cuellar Labs LLC, a Texas limited liability company doing business as LeagueSaga, maintains this
+repository and distributes the official LeagueSaga Import Helper releases. The company also operates
+the LeagueSaga service that receives the league information users review and approve for upload.
+
+Official desktop releases are published through this repository's
+[GitHub Releases](https://github.com/dcuellar322/league-saga-import-helper/releases). The desktop
+package identifies Cuellar Labs LLC as its author and maintainer. GitHub review ownership is assigned
+separately in [CODEOWNERS](../.github/CODEOWNERS).
+
+The source code is available under the [MIT license](../LICENSE), whose existing copyright notice
+names David Cuellar. The company role described here does not change that notice. The privacy
+statement and third-party service notices describe how the helper and hosted service handle imports.
+
 ## What this repository intentionally exposes
 
 - The desktop user experience and local provider-fetch behavior.

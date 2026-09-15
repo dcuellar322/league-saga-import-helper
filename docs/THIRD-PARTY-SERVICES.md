@@ -2,8 +2,9 @@
 
 Effective August 31, 2026
 
-Cuellar Labs LLC operates LeagueSaga and distributes the LeagueSaga Import Helper. The helper uses
-services that Cuellar Labs LLC does not control.
+Cuellar Labs LLC, a Texas limited liability company doing business as LeagueSaga, operates LeagueSaga
+and maintains and distributes the LeagueSaga Import Helper. The helper uses services that Cuellar
+Labs LLC does not control.
 
 ## ESPN and Disney
 

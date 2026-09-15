@@ -1,0 +1,35 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- Desktop ESPN import flow with local sign-in, league selection, and discovery of linked historical seasons.
+- Review of imported teams and owners, optional inclusion of rosters, matchups, draft picks, and transactions, and JSON export before upload.
+- Validated, provider-neutral history packages using import contract version `0.3.0`.
+- Launch links from LeagueSaga that prefill an import session and return users to the portal preview after upload.
+- Settings for clearing the ESPN session, viewing privacy-safe diagnostic logs, and downloading signed app updates.
+- Mac release automation for Apple Silicon and Intel, including signing, notarization, checksums, and installation checks on both architectures.
+- Automatic publication after the Mac release checks and production preview smoke test pass for the same commit.
+
+### Changed
+
+- Clarify Cuellar Labs LLC's role as repository maintainer, official helper distributor, and LeagueSaga service operator.
+
+### Fixed
+
+- Handling of legacy ESPN history and transaction imports.
+- Mac updater metadata to use ZIP payloads whose checksums remain valid after installer notarization.
+
+### Security
+
+- Keep ESPN passwords and raw session cookies on the user's computer and restrict production uploads to the LeagueSaga portal.
+- Harden packaged Electron builds with runtime protections and archive integrity checks.
+- Update `js-yaml` to `4.3.2` to address a denial-of-service vulnerability.
+
+[Unreleased]: https://github.com/dcuellar322/league-saga-import-helper/commits/master/
