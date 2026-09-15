@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-09-15
+
 ### Added
 
 - Fedora x64 RPM installer and Debian 12/13 package verification, including distro release gates.
@@ -46,5 +48,6 @@ First public release, with signed and notarized Mac installers for Apple Silicon
 - Harden packaged Electron builds with runtime protections and archive integrity checks.
 - Update `js-yaml` to `4.3.2` to address a denial-of-service vulnerability.
 
-[Unreleased]: https://github.com/dcuellar322/league-saga-import-helper/compare/v0.3.1...master
+[Unreleased]: https://github.com/dcuellar322/league-saga-import-helper/compare/v0.3.2...master
+[0.3.2]: https://github.com/dcuellar322/league-saga-import-helper/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/dcuellar322/league-saga-import-helper/releases/tag/v0.3.1
