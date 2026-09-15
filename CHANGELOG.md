@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Identify the GitHub repository explicitly when staging release assets from a job without a checkout.
+
 - Handling of legacy ESPN history and transaction imports.
 - Mac updater metadata to use ZIP payloads whose checksums remain valid after installer notarization.
 

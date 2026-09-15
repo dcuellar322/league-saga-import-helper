@@ -149,6 +149,20 @@ Run the production smoke test while Release is waiting for notarization so that 
 available when Release completes. If that evidence is missing, the release remains a draft.
 The **Notarization status** workflow can read Apple's submission history without resubmitting apps.
 
+### Recovering a publication failure
+
+If signing, notarization, and native verification succeeded but the final GitHub release step failed,
+reuse the artifacts from that exact run. Do not rebuild or move the version tag. Confirm the tag
+still points to the run's commit and the production preview succeeded for the same commit. Require
+all platform checks configured in that tagged workflow; newer platforms added on master do not change
+an older tag's release scope.
+
+Download the original run's artifacts, verify updater payload hashes and sizes, generate
+`SHA256SUMS.txt`, and stage a draft. Download the draft again and verify its checksums before
+publishing. Keep links to the original build and preview evidence in the release notes. GitHub CLI
+steps without a checkout must set `GH_REPO` (or pass `--repo`) explicitly. A failed historical run
+will retain its failure status after manual recovery.
+
 ## Linux releases
 
 Linux x64 builds produce an AppImage, a `.deb`, and an `.rpm`; no ZIP is published because it does not provide
