@@ -59,7 +59,8 @@ function setBridge(bridge: LeagueSagaBridge): void {
   Object.defineProperty(window, 'leagueSaga', { configurable: true, value: bridge });
 }
 
-describe('import wizard', () => {
+// These complete UI flows need more time for jsdom's accessibility queries under coverage.
+describe('import wizard', { timeout: 30_000 }, () => {
   beforeEach(() => setBridge(createBridge()));
   afterEach(() => cleanup());
 

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Update mature runtime and development dependencies through the September 26 cutoff, including Electron 44.4.5, React 19.3.0, Vite 8.3.1, Vitest 5.0.2, and Zod 4.6.5.
 - Microsoft Store installations delegate updates to the Store and reject GitHub installer downloads and restarts.
 - Refresh the mature dependency set after a 10-day soak period, including Electron 44, Vitest 5, ESLint, Zod, and related type and build packages. Electron 44 raises the minimum macOS version to 13.
 - Clarify unavailable-provider guidance and keep release instructions aligned with the current Mac, Linux, optional Windows, and Store workflows.
