@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Upgrade Zod to 4.6.6 to satisfy the required production dependency audit gate.
+
 - Require patched host Node releases and pin CI to Node 22.23.4 for CVE-2026-111497. Electron 44.4.5 remains a separate embedded-runtime exposure pending a verified stable vendor fix.
 
 - Cancel and ignore in-flight import or upload results when a new LeagueSaga session link arrives.
