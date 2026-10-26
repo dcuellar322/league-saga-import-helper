@@ -42,7 +42,14 @@ See [docs/PRIVACY.md](docs/PRIVACY.md), [docs/SECURITY.md](docs/SECURITY.md), an
 
 ## Requirements
 
-- Development: Node.js 22.13 or newer and npm 10 or newer.
+- Development: Node.js 22.23.4, 24.22.1, or 26.12.1 (or newer patches in those lines) and npm 10 or newer.
+
+The host Node requirement includes the CVE-2026-111497 Brotli decoder fix.
+Electron 44.4.5 bundles a separate affected Node 24.21.0 runtime. The host/CI
+update does not fix packaged applications. A stable Electron release or vendor
+backport containing the fix must be verified before claiming this exposure is
+resolved; do not substitute an unverified Electron upgrade.
+
 - Official macOS builds: macOS 13 or newer.
 - Official Linux builds: see [Linux installation](docs/LINUX.md) for the verified distributions.
 
