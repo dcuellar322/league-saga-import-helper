@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Refresh dependencies after the 10-day soak period, including Electron 45.3.0, jsdom 31, the updater, build tools, and GitHub Actions.
 - Update mature runtime and development dependencies through the September 26 cutoff, including Electron 44.4.5, React 19.3.0, Vite 8.3.1, Vitest 5.0.2, and Zod 4.6.5.
 - Microsoft Store installations delegate updates to the Store and reject GitHub installer downloads and restarts.
 - Refresh the mature dependency set after a 10-day soak period, including Electron 44, Vitest 5, ESLint, Zod, and related type and build packages. Electron 44 raises the minimum macOS version to 13.
@@ -22,9 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Update Electron's embedded Node runtime to 24.22.2, which includes the CVE-2026-111497 Brotli decoder fix. Installed copies require a new helper release to receive it.
 - Upgrade Zod to 4.6.6 to satisfy the required production dependency audit gate.
 
-- Require patched host Node releases and pin CI to Node 22.23.4 for CVE-2026-111497. Electron 44.4.5 remains a separate embedded-runtime exposure pending a verified stable vendor fix.
+- Require patched host Node releases and pin CI to Node 22.23.4 for CVE-2026-111497.
 
 - Cancel and ignore in-flight import or upload results when a new LeagueSaga session link arrives.
 - Report the current app version in ESPN requests and production smoke-test packages instead of stale hard-coded versions.
