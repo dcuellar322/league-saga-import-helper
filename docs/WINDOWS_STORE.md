@@ -29,8 +29,15 @@ Do not share account passwords or recovery codes.
 
 ## Build
 
-Dispatch **Windows Store package** from the desired commit. It requires all three identity variables
-and uploads `microsoft-store-submission-x64`, containing an unsigned `.msix` and `SHA256SUMS.txt`.
+Every full desktop tag build calls **Windows Store package** from that same commit. It requires all
+three identity variables and uploads `microsoft-store-submission-x64`, containing an unsigned `.msix`
+and `SHA256SUMS.txt`. It also creates the separate signed `windows-vm-test-x64` bundle.
+The main release and publication workflows require these Store package checks, so a missing or
+failed Windows build blocks GitHub publication. Microsoft Store review can remain pending while
+Mac/Linux downloads are published; report Windows submission, certification, and rollout separately.
+
+For recovery or a new test bundle, dispatch **Windows Store package** against the exact release tag
+with `vm_test` enabled. Do not use a newer branch commit or change the tag to recover a release.
 PR and master runs use an explicitly synthetic identity for build verification and do not upload
 submission artifacts. They do not require signing credentials or change the public GitHub release.
 
@@ -65,6 +72,10 @@ the public test certificate and signed MSIX. The signing key is not exported. Th
 Microsoft Store certification or Store installation/update verification.
 
 ## Submission and verification
+
+Take a VM snapshot before installing a signed test bundle. A test-signed package cannot prove an
+upgrade from a Microsoft-signed Store installation; use a Store-distributed flight for that check.
+Keep the unsigned submission package separate from the signed VM package.
 
 Upload the `.msix` to Partner Center, complete the listing, privacy policy, support information,
 pricing (Free), availability, age ratings, and certification notes. Microsoft still reviews the app;

@@ -25,6 +25,7 @@ jobs:
       GH_REPO: ${{ github.repository }}
       RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
       RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+      RELEASE_RUN_ID: ${{ github.event.workflow_run.id }}
     steps:
       - name: Require matching tag and successful production preview
         run: |
@@ -35,6 +36,21 @@ jobs:
           gh api "repos/$GH_REPO/actions/workflows/production-smoke.yml/runs?head_sha=$RELEASE_SHA&status=success&per_page=100" \
             --jq '.workflow_runs[] | select(.event == "workflow_dispatch") | .head_sha' | grep -Fxq "$RELEASE_SHA"
           test "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" = true
+      - name: Require Windows Store submission from the same release run
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/actions/runs/$RELEASE_RUN_ID/jobs?per_page=100" --paginate \
+            --jq '.jobs[] | select(.name == "Windows Store submission / msix" and .conclusion == "success") | .name' \
+            | grep -Fxq 'Windows Store submission / msix'
+          gh api "repos/$GH_REPO/actions/runs/$RELEASE_RUN_ID/artifacts?per_page=100" --paginate \
+            --jq '.artifacts[] | select(.name == "microsoft-store-submission-x64" and .expired == false) | .name' \
+            | grep -Fxq 'microsoft-store-submission-x64'
+          {
+            echo '## Platform readiness'
+            echo "Mac, Linux, and Windows Store packages passed in release run $RELEASE_RUN_ID."
+            echo 'Windows submission: download microsoft-store-submission-x64 from that run for Partner Center.'
+            echo 'Microsoft Store review and Windows installation/update verification remain separate; this publishes only the verified GitHub downloads.'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Download and verify release assets
         run: |
           set -euo pipefail

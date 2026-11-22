@@ -1,6 +1,16 @@
 name: Windows Store package
 
 on:
+  workflow_call:
+    inputs:
+      submission:
+        description: Use the real Store identity and retain submission artifacts
+        type: boolean
+        default: false
+      vm_test:
+        description: Also create a signed disposable VM test bundle
+        type: boolean
+        default: false
   pull_request:
   push:
     branches: [master]
@@ -18,9 +28,9 @@ jobs:
   msix:
     runs-on: windows-2025
     env:
-      MICROSOFT_STORE_IDENTITY_NAME: ${{ github.event_name == 'workflow_dispatch' && vars.MICROSOFT_STORE_IDENTITY_NAME || 'LeagueSaga.ImportHelper.CITest' }}
-      MICROSOFT_STORE_PUBLISHER: ${{ github.event_name == 'workflow_dispatch' && vars.MICROSOFT_STORE_PUBLISHER || 'CN=LeagueSaga CI Test' }}
-      MICROSOFT_STORE_PUBLISHER_DISPLAY_NAME: ${{ github.event_name == 'workflow_dispatch' && vars.MICROSOFT_STORE_PUBLISHER_DISPLAY_NAME || 'LeagueSaga CI Test' }}
+      MICROSOFT_STORE_IDENTITY_NAME: ${{ (inputs.submission || github.event_name == 'workflow_dispatch') && vars.MICROSOFT_STORE_IDENTITY_NAME || 'LeagueSaga.ImportHelper.CITest' }}
+      MICROSOFT_STORE_PUBLISHER: ${{ (inputs.submission || github.event_name == 'workflow_dispatch') && vars.MICROSOFT_STORE_PUBLISHER || 'CN=LeagueSaga CI Test' }}
+      MICROSOFT_STORE_PUBLISHER_DISPLAY_NAME: ${{ (inputs.submission || github.event_name == 'workflow_dispatch') && vars.MICROSOFT_STORE_PUBLISHER_DISPLAY_NAME || 'LeagueSaga CI Test' }}
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-node@v7.1.0
@@ -29,13 +39,16 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Require Store identity for submission builds
-        if: github.event_name == 'workflow_dispatch'
+        if: inputs.submission || github.event_name == 'workflow_dispatch'
         env:
           IDENTITY: ${{ vars.MICROSOFT_STORE_IDENTITY_NAME }}
           PUBLISHER: ${{ vars.MICROSOFT_STORE_PUBLISHER }}
           DISPLAY_NAME: ${{ vars.MICROSOFT_STORE_PUBLISHER_DISPLAY_NAME }}
         run: |
           if (!$env:IDENTITY -or !$env:PUBLISHER -or !$env:DISPLAY_NAME) { throw 'Configure all three MICROSOFT_STORE repository variables from Partner Center Product identity.' }
+      - name: Check tagged release versions
+        if: startsWith(github.ref, 'refs/tags/')
+        run: npm run release:check-version -- $env:GITHUB_REF_NAME
       - name: Build and validate unsigned MSIX
         run: ./scripts/build-msix.ps1
       - name: Verify packaged Windows renderer and deep link
@@ -46,8 +59,20 @@ jobs:
           if (!$process.WaitForExit(60000)) { $process.Kill(); throw 'Packaged smoke test timed out.' }
           Get-Content smoke.log
           if ($process.ExitCode -ne 0 -or !(Select-String -Path smoke.log -Pattern PACKAGED_SMOKE_OK -Quiet)) { Get-Content smoke-error.log; throw 'Packaged smoke test failed.' }
+      - name: Record Store handoff
+        if: inputs.submission || github.event_name == 'workflow_dispatch'
+        run: |
+          [xml]$manifest = Get-Content apps/desktop/dist-store/staging/AppxManifest.xml
+          $version = (Get-Content apps/desktop/package.json | ConvertFrom-Json).version
+          @(
+            '## Windows Store submission ready'
+            "App version: $version; Store package: $($manifest.Package.Identity.Version) (x64)."
+            "Source commit: $env:GITHUB_SHA"
+            'Download microsoft-store-submission-x64 for Partner Center. It is unsigned; Microsoft signs it after certification.'
+            'Windows installation, live ESPN import, Store update retention, and certification remain unverified. Mac/Linux publication can proceed while Store review is pending.'
+          ) | Add-Content $env:GITHUB_STEP_SUMMARY
       - uses: actions/upload-artifact@v7.0.2
-        if: github.event_name == 'workflow_dispatch'
+        if: inputs.submission || github.event_name == 'workflow_dispatch'
         with:
           name: microsoft-store-submission-x64
           path: |
@@ -55,10 +80,10 @@ jobs:
             apps/desktop/dist-store/SHA256SUMS.txt
           if-no-files-found: error
       - name: Sign and verify disposable VM test package
-        if: github.event_name == 'workflow_dispatch' && inputs.vm_test
+        if: (inputs.submission || github.event_name == 'workflow_dispatch') && inputs.vm_test
         run: ./scripts/sign-msix-test.ps1
       - uses: actions/upload-artifact@v7.0.2
-        if: github.event_name == 'workflow_dispatch' && inputs.vm_test
+        if: (inputs.submission || github.event_name == 'workflow_dispatch') && inputs.vm_test
         with:
           name: windows-vm-test-x64
           path: apps/desktop/dist-store/vm-test/*

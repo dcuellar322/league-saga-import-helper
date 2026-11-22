@@ -42,6 +42,10 @@ and follow [the release guide](RELEASES.md) for the build and preview procedures
 
 ## Verification
 
+- [Windows Store build](https://github.com/dcuellar322/league-saga-import-helper/actions/runs/45072606504):
+  package version **1.3.4.0** from the release tag passed MakeAppx validation, packaged renderer and
+  deep-link smoke tests, and test-bundle signature verification. Store submission and certification,
+  installed Windows checks, and Store update delivery remain pending.
 - [Tagged release build](https://github.com/dcuellar322/league-saga-import-helper/actions/runs/44875119625):
   signing, notarization, both Mac architecture launch checks, and Linux package verification passed.
 - [Prior-version update checks](https://github.com/dcuellar322/league-saga-import-helper/actions/runs/45068735251):

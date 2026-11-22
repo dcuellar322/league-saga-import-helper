@@ -76,7 +76,8 @@ WINDOWS_CSC_KEY_PASSWORD=
 
 Unsigned builds are acceptable for local development. Release jobs fail when a selected platform
 requires signing or notarization credentials and those credentials are absent. The normal tag flow
-builds macOS and Linux; Windows runs only when `platforms=all` is selected manually.
+builds macOS, Linux, and the Windows Store submission package. Direct Windows installers run only
+when `platforms=all` is selected manually; Store packaging does not use these signing secrets.
 
 ## Checksums
 
@@ -127,9 +128,14 @@ hostname, localhost, or an unrelated origin.
 
 ## GitHub release pipeline
 
-Tag pushes build macOS and Linux. To include Windows, dispatch Release with `platforms=all`;
+Tag pushes build macOS, Linux, and Windows Store packages from the same commit. The Release workflow
+calls **Windows Store package** with the real Partner Center identity and also creates a signed
+disposable-VM test bundle. Store packaging and smoke checks must pass before the draft is staged.
+Missing Store identity variables fail the release instead of silently omitting Windows.
+
+To also build a signed direct Windows installer, dispatch Release with `platforms=all`;
 select a version tag to stage a release, or a branch to build artifacts only.
-Windows still requires its own signing credentials.
+Direct Windows installers still require their own signing credentials.
 
 The Mac job builds both architectures with signing required and automatic publishing disabled.
 It validates app signatures and stapled notarization tickets, then signs, notarizes, and staples
@@ -153,12 +159,19 @@ After all checks pass, publish the draft release. The portal's existing macOS li
 GitHub's latest release page.
 
 The **Publish verified desktop release** workflow promotes a successful tagged Release automatically
-only when the production smoke workflow has also succeeded for the same commit. It checks the tag
+only when the production smoke workflow has also succeeded for the same commit and the release run
+contains a successful Windows Store submission job and its retained submission artifact. It checks the tag
 still resolves to that commit, downloads the draft assets, verifies their SHA-256 checksums, and
 requires both architecture installers and ZIP entries in the updater metadata before publishing.
 Run the production smoke test while Release is waiting for notarization so that its evidence is
 available when Release completes. If that evidence is missing, the release remains a draft.
 The **Notarization status** workflow can read Apple's submission history without resubmitting apps.
+
+Mac and Linux publication can proceed while Microsoft Store review is pending. The release is not
+complete for Windows until the Store package has been tested, submitted, and approved. Track that
+status explicitly in the release handoff. Download `microsoft-store-submission-x64` from the same
+Release run for Partner Center; use `windows-vm-test-x64` only in a disposable VM. Neither artifact
+is attached to the public GitHub release, and the test certificate is never an end-user signing option.
 
 ### Recovering a publication failure
 
@@ -184,9 +197,9 @@ SHA-512. Ubuntu 22.04 also runs the AppImage with extraction instead of requirin
 No check disables Electron's sandbox. See [Linux installation](LINUX.md).
 
 Manual `platforms=linux` runs independently of Apple and Windows signing. `desktop` builds Mac and
-Linux; `macos` builds only Mac; `all` includes Windows. A branch run produces Actions artifacts;
+Linux plus Windows Store; `macos` builds only Mac; `all` also includes direct Windows installers. A branch run produces Actions artifacts;
 a tag run stages a draft. Automatic publication is limited to tag pushes and requires successful
-Mac and Linux verification, matching production-preview evidence, and all three Linux packages in
+Mac, Linux, and Windows Store package verification, matching production-preview evidence, and all three Linux packages in
 `latest-linux.yml`, in addition to the existing Mac assets and checksums.
 
 Before announcing Linux support, test ESPN sign-in, review, upload, clearing the session, and browser
@@ -203,7 +216,9 @@ versions in the matrix are explicit and should be reviewed when a supported rele
 
 ## Microsoft Store (free Windows distribution)
 
-Use the separate **Windows Store package** workflow for unsigned MSIX submission packages.
+Full desktop releases automatically build unsigned MSIX submission packages through the reusable
+**Windows Store package** workflow. It can also be dispatched separately against the exact release
+tag to recover a missing package without rebuilding Mac/Linux or moving the tag.
 Microsoft handles signing and updates after certification. The existing signed NSIS workflow is
 for direct distribution and still requires its signing credentials. Store artifacts are not attached
 to the public desktop GitHub release. See [Microsoft Store setup and verification](WINDOWS_STORE.md).
