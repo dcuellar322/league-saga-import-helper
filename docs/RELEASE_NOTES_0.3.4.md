@@ -1,7 +1,7 @@
 # LeagueSaga Import Helper v0.3.4
 
-Draft release notes for the next helper release. Complete the publication checks below before
-announcing downloads. Follow [the release guide](RELEASES.md) for the signed build and preview steps.
+Published on November 22, 2026. See the [public release](https://github.com/dcuellar322/league-saga-import-helper/releases/tag/v0.3.4)
+and follow [the release guide](RELEASES.md) for the build and preview procedures.
 
 ## Changes since v0.3.2
 
@@ -40,19 +40,20 @@ announcing downloads. Follow [the release guide](RELEASES.md) for the signed bui
 - Electron remains pinned to **45.3.0**. It does not include the later November 11 Node security
   update; see the [runtime status in the README](../README.md#requirements).
 
-## Publication checks
+## Verification
 
-Keep the changelog entries under `Unreleased` until this version is published. Then move them to
-`0.3.4` with the actual publication date and update the comparison links. Use the changes and
-compatibility sections above in the GitHub release body; keep the draft status and this checklist
-out of the published notes.
-
-- [ ] Merge the release preparation and create `v0.3.4` at the intended release commit.
-- [ ] Pass the tagged Release workflow, including signing, notarization, both Mac architecture
-      launch checks, and Linux package verification on the configured distributions.
-- [ ] Verify SHA-256 checksums and updater metadata for every staged artifact.
-- [ ] Run the approved synthetic production-preview smoke test with a fresh one-time session
-      against the same commit as the tagged build.
-- [ ] Verify an update from the prior installed helper through Settings.
-- [ ] Confirm the publication gates pass, publish the verified draft, and record the actual
-      publication date in the changelog.
+- [Tagged release build](https://github.com/dcuellar322/league-saga-import-helper/actions/runs/44875119625):
+  signing, notarization, both Mac architecture launch checks, and Linux package verification passed.
+- [Prior-version update checks](https://github.com/dcuellar322/league-saga-import-helper/actions/runs/45068735251):
+  both Mac architectures upgraded through Settings from an isolated v0.3.2 test copy, restarted into
+  the unchanged signed v0.3.4 payload, and retained settings. The test copies used a local feed and
+  UI instrumentation and were re-signed with the same Developer ID; public GitHub discovery was
+  checked separately after publication.
+- The delivered `latest-mac.yml` includes `minimumSystemVersion: 22.0.0` (Darwin 22, macOS 13).
+  The prior updater rejected a simulated macOS 12 host. This delivery metadata and its checksum
+  were updated in the draft after the tagged build; signed payloads and the tag were unchanged.
+- [Production preview](https://github.com/dcuellar322/league-saga-import-helper/actions/runs/45069456485):
+  HTTP 200 at release commit `93334c7470225a6f0873f7ca907eed2babf2e6cf`. The portal displayed the
+  synthetic preview; no league history was saved.
+- [Publication gate](https://github.com/dcuellar322/league-saga-import-helper/actions/runs/45065819489):
+  matching tag, preview evidence, and all asset checksums passed before publication.
