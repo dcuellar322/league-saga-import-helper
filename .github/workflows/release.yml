@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       platforms:
-        description: Platforms to build (tags default to macOS and Linux)
+        description: Platforms to build (desktop includes Mac, Linux, and Windows Store)
         type: choice
         options: [desktop, macos, linux, all]
         default: desktop
@@ -129,6 +129,17 @@ jobs:
             "$app/Contents/MacOS/$executable" --smoke-test "leaguesaga-import://start?apiBase=https%3A%2F%2Fportal.leaguesaga.com&token=smoke-token&leagueId=424242&startYear=2025&importSessionId=smoke-session"
           done
 
+  windows-store:
+    name: Windows Store submission
+    if: inputs.platforms != 'macos' && inputs.platforms != 'linux'
+    needs: quality
+    permissions:
+      contents: read
+    uses: ./.github/workflows/windows-store.yml
+    with:
+      submission: true
+      vm_test: true
+
   windows:
     if: inputs.platforms == 'all'
     needs: quality
@@ -229,15 +240,28 @@ jobs:
       always() && startsWith(github.ref, 'refs/tags/') &&
       (needs.verify-macos.result == 'success' || (inputs.platforms == 'linux' && needs.verify-macos.result == 'skipped')) &&
       (needs.windows.result == 'success' || needs.windows.result == 'skipped') &&
+      (needs.windows-store.result == 'success' ||
+      ((inputs.platforms == 'macos' || inputs.platforms == 'linux') && needs.windows-store.result == 'skipped')) &&
       ((needs.verify-linux.result == 'success' && needs.verify-linux-distros.result == 'success') ||
       (inputs.platforms == 'macos' && needs.verify-linux.result == 'skipped' && needs.verify-linux-distros.result == 'skipped'))
-    needs: [verify-macos, windows, verify-linux, verify-linux-distros]
+    needs: [verify-macos, windows, windows-store, verify-linux, verify-linux-distros]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8.0.2
+        if: needs.verify-macos.result == 'success'
         with:
+          name: macos
           path: release-artifacts
-          merge-multiple: true
+      - uses: actions/download-artifact@v8.0.2
+        if: needs.verify-linux.result == 'success'
+        with:
+          name: linux-x64
+          path: release-artifacts
+      - uses: actions/download-artifact@v8.0.2
+        if: needs.windows.result == 'success'
+        with:
+          name: windows-x64
+          path: release-artifacts
       - name: Generate checksums
         working-directory: release-artifacts
         run: find . -maxdepth 1 -type f -print0 | sort -z | xargs -0 sha256sum > ../SHA256SUMS.txt

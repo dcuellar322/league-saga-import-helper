@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Build Windows Store submission and VM test packages with each full desktop release, and require the Store package checks before publishing Mac and Linux downloads. Microsoft Store review remains a separate step.
+
 ## [0.3.4] - 2026-11-22
 
 ### Added
