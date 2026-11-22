@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-11-22
+
 ### Added
 
 - Optional self-signed Windows VM test bundles with a public certificate, verified signature, and installation guide.
@@ -16,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Refresh dependencies after the 10-day soak period, including Electron 45.3.0, React 19.3.1, Zod 4.6.7, jsdom 31, the updater, build tools, and GitHub Actions.
 - Raise the minimum macOS version to 13 with the updated Electron runtime.
+- Prevent older macOS installations from downloading the incompatible update through updater metadata.
 - Microsoft Store installations delegate updates to the Store and reject GitHub installer downloads and restarts.
 - Clarify unavailable-provider guidance and keep release instructions aligned with the current Mac, Linux, optional Windows, and Store workflows.
 
@@ -68,6 +71,7 @@ First public release, with signed and notarized Mac installers for Apple Silicon
 - Harden packaged Electron builds with runtime protections and archive integrity checks.
 - Update `js-yaml` to `4.3.2` to address a denial-of-service vulnerability.
 
-[Unreleased]: https://github.com/dcuellar322/league-saga-import-helper/compare/v0.3.2...master
+[Unreleased]: https://github.com/dcuellar322/league-saga-import-helper/compare/v0.3.4...master
+[0.3.4]: https://github.com/dcuellar322/league-saga-import-helper/compare/v0.3.2...v0.3.4
 [0.3.2]: https://github.com/dcuellar322/league-saga-import-helper/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/dcuellar322/league-saga-import-helper/releases/tag/v0.3.1
